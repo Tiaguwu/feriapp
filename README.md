@@ -7,14 +7,14 @@ Permite administrar ferias temáticas, gestionar inscripciones de emprendedores 
 
 ## 🛠️ Stack
 
-| Tecnología | Versión |
-|------------|---------|
-| Python | 3.13+ |
-| Django | 5.1+ |
-| Base de datos | SQLite (desarrollo) |
-| Frontend | Bootstrap 5 |
-| Tests | `django.test.TestCase` |
-| Control de versiones | Git + GitHub |
+| Tecnología           | Versión                |
+|----------------------|------------------------|
+| Python               | 3.13+                  |
+| Django               | 5.1+                   |
+| Base de datos        | SQLite (desarrollo)    |
+| Frontend             | Bootstrap 5            |
+| Tests                | `django.test.TestCase` |
+| Control de versiones | Git + GitHub           |
 
 ---
 
@@ -33,11 +33,11 @@ Permite administrar ferias temáticas, gestionar inscripciones de emprendedores 
 
 ## 👥 Integrantes
 
-| Nombre | Usuario GitHub |
-|--------|---------------|
-| ... | [@usuario](https://github.com/usuario) |
-| ... | [@usuario](https://github.com/usuario) |
-| ... | [@usuario](https://github.com/usuario) |
+| Nombre   | Usuario GitHub                                |
+|----------|-----------------------------------------------|
+| Cristian | [@cbeltran90](https://github.com/cbeltran90)  |
+| Tiago    | [@Tiaguwu](https://github.com/Tiaguwu)        |
+| Andrés   | [@chimaguero](https://github.com/chimanguero) |
 
 ---
 
@@ -110,10 +110,10 @@ python manage.py test ferias.tests.test_views -v 2
 
 > ⚠️ Solo para uso del corrector en entorno de desarrollo local.
 
-| Rol | Usuario | Contraseña |
-|-----|---------|-----------|
-| Superusuario / Admin | `admin` | `admin1234` |
-| Usuario de prueba | `usuario_prueba` | `prueba1234` |
+| Rol                  | Usuario          | Contraseña   |
+|----------------------|------------------|--------------|
+| Superusuario / Admin | `admin`          | `admin1234`  |
+| Usuario de prueba    | `usuario_prueba` | `prueba1234` |
 
 ---
 
@@ -187,9 +187,9 @@ Describir aquí:
 
 ## 🐛 Problemas comunes
 
-| Problema | Solución |
-|----------|----------|
-| `OperationalError: no such table` | Corré `python manage.py migrate` |
-| `No module named django` | Activá el entorno virtual |
-| Barra de progreso muestra 0% | Verificá que `puestos_ocupados()` cuenta solo inscripciones `confirmadas` |
-| Login no redirige bien | Verificá `LOGIN_REDIRECT_URL` en `settings.py` |
+| Problema                          | Solución                                                                  |
+|-----------------------------------|---------------------------------------------------------------------------|
+| `OperationalError: no such table` | Corré `python manage.py migrate`                                          |
+| `No module named django`          | Activá el entorno virtual                                                 |
+| Barra de progreso muestra 0%      | Verificá que `puestos_ocupados()` cuenta solo inscripciones `confirmadas` |
+| Login no redirige bien            | Verificá `LOGIN_REDIRECT_URL` en `settings.py`                            |
