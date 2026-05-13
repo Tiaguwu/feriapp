@@ -38,6 +38,8 @@ Permite administrar ferias temáticas, gestionar inscripciones de emprendedores 
 | Cristian | [@cbeltran90](https://github.com/cbeltran90)  |
 | Tiago    | [@Tiaguwu](https://github.com/Tiaguwu)        |
 | Andrés   | [@chimaguero](https://github.com/chimanguero) |
+| Franco   | [@fcherini92](https://github.com/fcherini92)  |
+
 
 ---
 
