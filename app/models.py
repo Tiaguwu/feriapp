@@ -123,6 +123,55 @@ class Visitante(models.Model):
         verbose_name = "Visitante"
         verbose_name_plural = "Visitantes"
         ordering = ["apellido", "nombre"]
+
+    def __str__(self):
+        return f"{self.apellido} {self.nombre}"
+    
+    @classmethod
+    def validate(
+        cls, nombre, apellido, email, usuario
+    ):
+        errors = []
+
+        if not nombre or not nombre.strip():
+            errors.append("El nombre es obligatorio.")
+        if not apellido or not apellido.strip():
+            errors.append("El apellido es obligatorio.")
+        if not email or not email.strip():
+            errors.append("El email es obligatorio.")
+        if not usuario:
+            errors.append("El usuario asociado es obligatorio.")
+
+        return errors
+    
+    @classmethod
+    def new(
+        cls, nombre, apellido, email, usuario
+    ):
+        errors = cls.validate(nombre, apellido, email, usuario)
+        if errors:
+            return None, errors
+        
+        visitante = cls.objects.create(
+            nombre=nombre.strip(),
+            apellido=apellido.strip(),
+            email=email.strip(),
+            usuario=usuario
+        )
+
+        return visitante, []
+    
+    def update(self, nombre, apellido, email):
+        errors = self.__class__.validate(nombre, apellido, email, self.usuario)
+        if errors:
+            return errors
+        
+        self.nombre = nombre.strip()
+        self.apellido = apellido.strip()
+        self.email = email.strip()
+        self.save()
+        return []
+    
     # class Categoria(models.Model): ...  ← extraer categoria a FK
     # class Emprendedor(models.Model): ...
     # class Inscripcion(models.Model): ...
