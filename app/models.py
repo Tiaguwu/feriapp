@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from django.db import models
-from django.db import User
+from django.contrib.auth.models import User
+
 
 
 
@@ -141,13 +142,13 @@ class Emprendedor(models.Model):
         if not apellido or not apellido.strip():
             errors.append("El apellido es obligatorio.")
         if not email or not email.strip():
-            errors.append("El email es obligatiorio.")
+            errors.append("El email es obligatorio.")
         if not rubro or not rubro.strip():
             errors.append("El rubro es obligatorio.")
         if not telefono or not telefono.strip():
             errors.append("El telefono es obligatorio.")
         if not usuario:
-            errors.append("El usuario asociado es obligatorio")
+            errors.append("El usuario asociado es obligatorio.")
 
         return errors
     
