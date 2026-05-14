@@ -127,6 +127,70 @@ class Emprendedor(models.Model):
         verbose_name_plural = "Emprendedores"
         ordering = ["apellido", "nombre"]
 
+    def __str__(self):
+        return f"{self.apellido} {self.nombre}"
+    
+    @classmethod
+    def validate(
+        cls, nombre, apellido, email, rubro, telefono, usuario
+    ):
+        errors = []
+
+        if not nombre or not nombre.strip():
+            errors.append("El nombre es obligatorio.")
+        if not apellido or not apellido.strip():
+            errors.append("El apellido es obligatorio.")
+        if not email or not email.strip():
+            errors.append("El email es obligatiorio.")
+        if not rubro or not rubro.strip():
+            errors.append("El rubro es obligatorio.")
+        if not telefono or not telefono.strip():
+            errors.append("El telefono es obligatorio.")
+        if not usuario:
+            errors.append("El usuario asociado es obligatorio")
+
+        return errors
+    
+    @classmethod
+    def new(
+        cls, nombre, apellido, email, rubro, telefono, usuario
+    ):
+        
+        errors = cls.validate(
+            nombre, apellido, email, rubro, telefono, usuario
+        )
+        if errors:
+            return None, errors
+        
+        emprendedor = cls.objects.create(
+            nombre=nombre.strip(),
+            apellido=apellido.strip(),
+            email=email.strip(),
+            rubro=rubro.strip(),
+            telefono=telefono.strip(),
+            usuario=usuario,
+        )
+        return emprendedor, []
+    
+    def update(
+        self, nombre, apellido, email, rubro, telefono, usuario
+    ):
+        
+        errors = self.__class__.validate(
+            nombre, apellido, email, rubro, telefono, self.usuario
+        )
+        if errors:
+            return errors
+        
+        self.nombre=nombre.strip()
+        self.apellido=apellido.strip()
+        self.email=email
+        self.rubro=rubro.strip()
+        self.telefono=telefono.strip()
+        self.save()
+
+        return []
+
     # class Categoria(models.Model): ...  ← extraer categoria a FK
     # class Emprendedor(models.Model): ...
     # class Inscripcion(models.Model): ...
