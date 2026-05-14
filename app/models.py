@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Feria(models.Model):
@@ -111,7 +112,17 @@ class Feria(models.Model):
         self.save()
         return []
 
-    # TODO: Agregar los siguientes modelos:
+class Visitante(models.Model):
+    nombre = models.CharField(max_length=200)
+    apellido = models.CharField(max_length=200)
+    email = models.EmailField(unique=True)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Visitante"
+        verbose_name_plural = "Visitantes"
+        ordering = ["apellido", "nombre"]
     # class Categoria(models.Model): ...  ← extraer categoria a FK
     # class Emprendedor(models.Model): ...
     # class Inscripcion(models.Model): ...
