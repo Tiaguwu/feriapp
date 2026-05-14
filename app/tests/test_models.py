@@ -3,7 +3,9 @@
 from datetime import date
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
+from app.models import Emprendedor
 from app.models import Feria
 
 
@@ -126,6 +128,98 @@ class FeriaModelTest(TestCase):
         self.feria.refresh_from_db()
         self.assertEqual(self.feria.nombre, "Feria de Invierno")  # sin cambios
 
-    # TODO: agregar tests para Emprendedor e Inscripcion cuando los implementen:
+class EmprendedorModelTest(TestCase):
+
+    def setUp(self):
+        # Creamos un usuario de base para las pruebas de OneToOneField
+        self.user = User.objects.create_user(username='tiago_user', password='password123')
+        self.emprendedor = Emprendedor.objects.create(
+            nombre="Tiago",
+            apellido="Caranchi",
+            email="tiago@ejemplo.com",
+            rubro="Artesanias",
+            telefono="2901522196",
+            usuario=self.user
+        )
+
+    # --- __str__ y metadatos ---
+
+    def test_str_retorna_apellido_nombre(self):
+        # Verifica que el método __str__ use f-strings con el formato correcto
+        self.assertEqual(str(self.emprendedor), "Caranchi Tiago")
+
+    # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacio(self):
+        # Verifica que con todos los campos correctos no haya errores
+        errors = Emprendedor.validate(
+            self.emprendedor.nombre, 
+            self.emprendedor.apellido, 
+            self.emprendedor.email, 
+            self.emprendedor.rubro, 
+            self.emprendedor.telefono, 
+            self.emprendedor.usuario
+        )
+        self.assertEqual(errors, [])
+
+    def test_validate_campos_vacios(self):
+
+        errors = Emprendedor.validate(
+            "", "  ", " ", "Rubro", "123", self.user
+        )
+        self.assertIn("El nombre es obligatorio.", errors)
+        self.assertIn("El apellido es obligatorio.", errors)
+        self.assertIn("El email es obligatorio.", errors)
+
+    def test_validate_sin_usuario_retorna_error(self):
+
+        errors = Emprendedor.validate(
+            "Tiago", "C", "t@t.com", "Rubro", "123", None
+        )
+        self.assertIn("El usuario asociado es obligatorio.", errors)
+
+    # --- new ---
+
+    def test_new_con_datos_validos(self):
+
+        user2 = User.objects.create_user(username='user2', password='123')
+        instacia, errors = Emprendedor.new(
+            "Nuevo", "Feriante", "nuevo@test.com", "Textil", "4444", user2
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(instacia)
+        self.assertEqual(instacia.nombre, "Nuevo")
+        self.assertTrue(Emprendedor.objects.filter(email="nuevo@test.com").exists())
+
+    def test_new_con_datos_invalidos(self):
+        count_antes = Emprendedor.objects.count()
+        instancia, errors = Emprendedor.new("", "", "", "", "", None)
+        self.assertIsNone(instancia)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Emprendedor.objects.count(), count_antes)
+    
+    # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+
+        errors = self.emprendedor.update(
+            "Tiago Editado",
+            "Caranchi",
+            "TiagoC@ejemplo,com",
+            "Muebles",
+            "2901000000",
+            self.user
+        )
+        self.assertEqual(errors, [])
+        self.emprendedor.refresh_from_db()
+        self.assertEqual(self.emprendedor.nombre, "Tiago Editado")
+
+    def test_update_con_datos_invalidos_mantiene_datos_originales(self):
+
+        errors = self.emprendedor.update("","","error@ejemplo.com","","",self.user)
+        self.assertTrue(len(errors)>0)
+        self.emprendedor.refresh_from_db()
+        self.assertEqual(self.emprendedor.nombre, "Tiago")
+
     # def test_tiene_lugar_false_cuando_llena(self): ...
     # def test_puestos_ocupados_cuenta_solo_confirmadas(self): ...
