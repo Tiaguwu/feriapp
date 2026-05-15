@@ -5,7 +5,6 @@ from __future__ import annotations
 from django.db import models
 from django.contrib.auth.models import User
 
-
 class Feria(models.Model):
     """Representa una feria con su período, ubicación y capacidad disponible."""
 
@@ -128,11 +127,8 @@ class Visitante(models.Model):
         return f"{self.apellido} {self.nombre}"
     
     @classmethod
-    def validate(
-        cls, nombre, apellido, email, usuario
-    ):
+    def validate(cls, nombre, apellido, email, usuario):
         errors = []
-
         if not nombre or not nombre.strip():
             errors.append("El nombre es obligatorio.")
         if not apellido or not apellido.strip():
@@ -141,13 +137,10 @@ class Visitante(models.Model):
             errors.append("El email es obligatorio.")
         if not usuario:
             errors.append("El usuario asociado es obligatorio.")
-
         return errors
-    
+
     @classmethod
-    def new(
-        cls, nombre, apellido, email, usuario
-    ):
+    def new(cls, nombre, apellido, email, usuario):
         errors = cls.validate(nombre, apellido, email, usuario)
         if errors:
             return None, errors
@@ -158,9 +151,8 @@ class Visitante(models.Model):
             email=email.strip(),
             usuario=usuario
         )
-
         return visitante, []
-    
+
     def update(self, nombre, apellido, email):
         errors = self.__class__.validate(nombre, apellido, email, self.usuario)
         if errors:
@@ -171,7 +163,70 @@ class Visitante(models.Model):
         self.email = email.strip()
         self.save()
         return []
+
+
+class Emprendedor(models.Model):
+    nombre = models.CharField(max_length=200)
+    apellido = models.CharField(max_length=200)
+    email = models.EmailField(unique=True)
+    rubro = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=17, blank=True, null=True)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Emprendedor"
+        verbose_name_plural = "Emprendedores"
+        ordering = ["apellido", "nombre"]
+
+    def __str__(self):
+        return f"{self.apellido} {self.nombre}"
     
+    @classmethod
+    def validate(cls, nombre, apellido, email, rubro, telefono, usuario):
+        errors = []
+        if not nombre or not nombre.strip():
+            errors.append("El nombre es obligatorio.")
+        if not apellido or not apellido.strip():
+            errors.append("El apellido es obligatorio.")
+        if not email or not email.strip():
+            errors.append("El email es obligatorio.")
+        if not rubro or not rubro.strip():
+            errors.append("El rubro es obligatorio.")
+        if not telefono or not telefono.strip():
+            errors.append("El telefono es obligatorio.")
+        if not usuario:
+            errors.append("El usuario asociado es obligatorio.")
+        return errors
+
+    @classmethod
+    def new(cls, nombre, apellido, email, rubro, telefono, usuario):
+        errors = cls.validate(nombre, apellido, email, rubro, telefono, usuario)
+        if errors:
+            return None, errors
+        
+        emprendedor = cls.objects.create(
+            nombre=nombre.strip(),
+            apellido=apellido.strip(),
+            email=email.strip(),
+            rubro=rubro.strip(),
+            telefono=telefono.strip(),
+            usuario=usuario,
+        )
+        return emprendedor, []
+
+    def update(self, nombre, apellido, email, rubro, telefono):
+        errors = self.__class__.validate(nombre, apellido, email, rubro, telefono, self.usuario)
+        if errors:
+            return errors
+        
+        self.nombre = nombre.strip()
+        self.apellido = apellido.strip()
+        self.email = email.strip()
+        self.rubro = rubro.strip()
+        self.telefono = telefono.strip()
+        self.save()
+        return []
+
     # class Categoria(models.Model): ...  ← extraer categoria a FK
     # class Emprendedor(models.Model): ...
     # class Inscripcion(models.Model): ...
