@@ -303,12 +303,43 @@ class Inscripcion(models.Model):
         )
         if errors:
             return None, errors
-
+        hay_lugar = feria.tiene_lugar()
         inscripcion = cls.objects.create(
             emprendedor=emprendedor,
-            numero_puesto=None if not feria.tiene_lugar() else cls.puesto_libre(feria),
+            numero_puesto=None if not hay_lugar else cls.puesto_libre(feria),
             feria=feria,
             registrado_por=registrado_por,
-            estado="confirmada" if feria.tiene_lugar() else "lista_espera",
+            estado="confirmada" if hay_lugar else "lista_espera",
         )
         return inscripcion, errors
+
+    #El método update actualiza el estado de la inscripción. Esto evita que se creen inscripciones aleatorias y luego se les asigne un emprendedor y una feria.
+    #Para cambiar el emprendedor o la feria, se debería crear una nueva inscripción y eliminar la anterior, pudiendo perder el lugar en la fila.
+
+    def update_estado(
+        self, nuevo_estado                  
+    ):
+        """
+        Actualiza el estado de la inscripción y ajusta los puestos si es necesario.
+        Retorna una lista de errores. Si está vacía, la actualización fue exitosa.
+        """
+        estados_validos = [e[0] for e in self.ESTADOS]
+        if nuevo_estado not in estados_validos:
+            return [f"El estado: '{nuevo_estado}' no es válido."]
+
+        if nuevo_estado == "confirmada" and self.estado != "confirmada":
+            # Solo confirmar si hay lugar
+            if self.feria.tiene_lugar():
+                self.estado = "confirmada"
+                self.numero_puesto = Inscripcion.puesto_libre(self.feria)
+                self.save()
+            else:
+                return ["No hay puestos disponibles para confirmar esta inscripción."]
+        elif nuevo_estado == "cancelada" and self.estado == "confirmada":
+            # Liberar el puesto si se cancela una inscripción confirmada
+            self.estado = "cancelada"
+            self.save()
+        else:
+            self.estado = nuevo_estado
+            self.save()
+        return []
