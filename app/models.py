@@ -276,3 +276,39 @@ class Inscripcion(models.Model):
             errors.append("Debe haber un usuario registrado que realice la inscripción.")
 
         return errors
+
+    @classmethod
+    def puesto_libre(cls, feria):
+        """Retorna el número del primer puesto libre en la feria."""
+        puestos_tomados = set(
+            feria.inscripcion_set
+                .filter(estado="confirmada")
+                .values_list("numero_puesto", flat=True)
+        )
+        for puesto in range(1, feria.capacidad_puestos + 1):
+            if puesto not in puestos_tomados:
+                return puesto
+        return None
+
+    @classmethod
+    def new(
+        cls, emprendedor, feria, registrado_por
+    ):
+        """
+        Crea y persiste una nueva inscripción si los datos son válidos.
+        Retorna (instancia, errors). Si hay errores, instancia es None.
+        """
+        errors = cls.validate(
+            emprendedor, feria, registrado_por
+        )
+        if errors:
+            return None, errors
+
+        inscripcion = cls.objects.create(
+            emprendedor=emprendedor,
+            numero_puesto=None if not feria.tiene_lugar() else cls.puesto_libre(feria),
+            feria=feria,
+            registrado_por=registrado_por,
+            estado="confirmada" if feria.tiene_lugar() else "lista_espera",
+        )
+        return inscripcion, errors
