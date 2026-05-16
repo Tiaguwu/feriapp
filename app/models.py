@@ -256,3 +256,23 @@ class Inscripcion(models.Model):
         """Retorna una representación legible de la inscripción."""
         return f"Inscripción de {self.emprendedor} a {self.feria}"
 
+    @classmethod
+    def validate(
+        cls, emprendedor, feria,registrado_por
+    ):
+        """
+        Valida los datos de la inscripción. Retorna una lista de errores.
+        Si la lista está vacía, los datos son válidos.
+        """
+        errors = []
+
+        if not emprendedor:
+            errors.append("Debe seleccionar un emprendedor.")
+
+        if not feria:
+            errors.append("Debe seleccionar una feria.")
+
+        if not registrado_por:
+            errors.append("Debe haber un usuario registrado que realice la inscripción.")
+
+        return errors
