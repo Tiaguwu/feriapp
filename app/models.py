@@ -229,4 +229,30 @@ class Emprendedor(models.Model):
 
     # class Categoria(models.Model): ...  ← extraer categoria a FK
     # class Emprendedor(models.Model): ...
-    # class Inscripcion(models.Model): ...
+    # class Inscripcion(models.Model):
+
+class Inscripcion(models.Model):
+    """Representa la inscripicón de un emprendedor a una feria."""
+
+    ESTADOS = [
+        ("lista_espera", "En lista de espera"),
+        ("confirmada", "Confirmada"),
+        ("cancelada", "Cancelada"),
+    ]
+
+    emprendedor = models.ForeignKey(Emprendedor, on_delete=models.CASCADE)
+    feria = models.ForeignKey(Feria, on_delete=models.CASCADE)
+    numero_puesto = models.PositiveIntegerField(null=True, blank=True)
+    fecha_inscripcion = models.DateTimeField(auto_now_add=True)
+    registrado_por = models.ForeignKey(User, on_delete=models.CASCADE)
+    estado = models.CharField(choices=ESTADOS, default="lista_espera", max_length=15)
+    class Meta:
+        verbose_name = "Inscripción"
+        verbose_name_plural = "Inscripciones"
+        unique_together = ("emprendedor", "feria")
+        ordering = ["-fecha_inscripcion"]
+
+    def __str__(self):
+        """Retorna una representación legible de la inscripción."""
+        return f"Inscripción de {self.emprendedor} a {self.feria}"
+
