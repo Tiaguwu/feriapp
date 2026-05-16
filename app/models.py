@@ -1,6 +1,7 @@
 """Modelos de dominio para la aplicación de ferias."""
 
 from __future__ import annotations
+from datetime import date
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -255,7 +256,7 @@ class Inscripcion(models.Model):
 
     def __str__(self):
         """Retorna una representación legible de la inscripción."""
-        return f"Inscripción de {self.emprendedor} a {self.feria}"
+        return f"Inscripción de {self.emprendedor} a {self.feria}. Puesto: {self.numero_puesto or 'N/A'} - Estado: {self.estado}"
 
     @classmethod
     def validate(
@@ -275,6 +276,12 @@ class Inscripcion(models.Model):
 
         if not registrado_por:
             errors.append("Debe haber un usuario registrado que realice la inscripción.")
+
+        if feria and not feria.activa:
+            errors.append("La feria no está activa.")
+
+        if feria and date.today() > feria.fecha_fin:
+            errors.append("La feria ya terminó.")
 
         return errors
 

@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from app.models import Emprendedor
 from app.models import Feria
 from app.models import Visitante
+from app.models import Inscripcion
 
 class FeriaModelTest(TestCase):
     """Verifica validaciones y operaciones básicas del modelo Feria."""
@@ -309,3 +310,172 @@ class VisitanteModelTest(TestCase):
         self.assertEqual(self.visitante.nombre, "Tiago")
     # def test_tiene_lugar_false_cuando_llena(self): ...
     # def test_puestos_ocupados_cuenta_solo_confirmadas(self): ...
+
+class InscripcionModelTest(TestCase):
+    """Verifica validaciones y operaciones básicas del modelo Inscripcion."""
+
+    def setUp(self):
+        '''Crea una feria base y un emprendedor para cada caso de prueba.'''
+        # Usuario emprendedor
+        self.user_emp = User.objects.create_user(username='emp_user', password='123')
+        self.emprendedor = Emprendedor.objects.create(
+            nombre="Andrés", apellido="Rühle", email="andres@ejemplo.com",
+            rubro="Textil", telefono="2901497199", usuario=self.user_emp
+        )
+        # Usuario que registra la inscripción
+        self.user_admin = User.objects.create_user(username='admin_user', password='123')
+        # Feria con capacidad para 2 puestos
+        self.feria = Feria.objects.create(
+            nombre="Feria de Invierno",
+            categoria="Artesanías",
+            fecha_inicio=date(2026, 7, 1),
+            fecha_fin=date(2026, 7, 3),
+            ubicacion="Plaza Central",
+            capacidad_puestos=2
+        )
+        self.inscripcion = Inscripcion.objects.create(
+            emprendedor=self.emprendedor,
+            feria=self.feria,
+            numero_puesto=1,
+            registrado_por=self.user_admin,
+            estado="confirmada"
+        )
+
+        # usuarios extra para tests
+        self.user2 = User.objects.create_user(username='emp2', password='123')
+        self.emp2 = Emprendedor.objects.create(
+            nombre="Ana", apellido="Paz", email="ana@ejemplo.com",
+            rubro="Joyeria", telefono="2901445566", usuario=self.user2
+        )
+        self.user3 = User.objects.create_user(username='emp3', password='123')
+        self.emp3 = Emprendedor.objects.create(
+            nombre="Leo", apellido="Gil", email="leo@ejemplo.com",
+            rubro="Carpintería", telefono="2901554433", usuario=self.user3
+        )
+
+    # --- __str__ ---
+
+    def test_str_retorna_descripcion_completa(self):
+        self.assertEqual(
+            str(self.inscripcion),
+            "Inscripción de Rühle Andrés a Feria de Invierno. Puesto: 1 - Estado: confirmada"
+        )
+
+    # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = Inscripcion.validate(
+            self.emprendedor,
+            self.feria,
+            self.user_admin
+        )
+        self.assertEqual(errors, [])
+
+    def test_validate_sin_emprendedor_retorna_error(self):
+        errors = Inscripcion.validate(
+            None,
+            self.feria,
+            self.user_admin
+        )
+        self.assertIn("Debe seleccionar un emprendedor.", errors)
+    
+    def test_validate_sin_feria_retorna_error(self):
+        errors = Inscripcion.validate(
+            self.emprendedor,
+            None,
+            self.user_admin
+        )
+        self.assertIn("Debe seleccionar una feria.", errors)
+    
+    def test_validate_sin_usuario_retorna_error(self):
+        errors = Inscripcion.validate(
+            self.emprendedor,
+            self.feria,
+            None
+        )
+        self.assertIn("Debe haber un usuario registrado que realice la inscripción.", errors)
+    
+    def test_validate_feria_inactiva_retorna_error(self):
+        self.feria.activa = False
+        self.feria.save()
+        errors = Inscripcion.validate(
+            self.emprendedor,
+            self.feria,
+            self.user_admin
+        )
+        self.assertIn("La feria no está activa.", errors)
+
+    def test_validate_feria_finalizada_retorna_error(self):
+        self.feria.fecha_fin = date(1982, 10, 31)
+        self.feria.save()
+        errors = Inscripcion.validate(
+            self.emprendedor,
+            self.feria,
+            self.user_admin
+        )
+        self.assertIn("La feria ya terminó.", errors)
+
+    # --- new ---
+
+    def test_new_con_lugar_crea_inscripcion_confirmada(self):
+
+        inscripcion, errors = Inscripcion.new(self.emp2, self.feria, self.user_admin)
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(inscripcion)
+        self.assertEqual(inscripcion.estado, "confirmada")
+        self.assertEqual(inscripcion.numero_puesto, 2)
+
+    def test_new_feria_llena_crea_en_lista_espera(self):
+        # lleno primero el puesto 2 (último libre)
+        Inscripcion.new(self.emp2, self.feria, self.user_admin)
+
+        # creo una inscripción que debería ir a lista de espera
+        inscripcion, errors = Inscripcion.new(self.emp3, self.feria, self.user_admin)
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(inscripcion)
+        self.assertEqual(inscripcion.estado, "lista_espera")
+        self.assertIsNone(inscripcion.numero_puesto)
+
+    def test_new_con_datos_invalidos_no_crea(self):
+        # cuento las inscripciones
+        count_antes = Inscripcion.objects.count()
+
+        inscripcion, errors = Inscripcion.new(None, None, None)
+        self.assertIsNone(inscripcion)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Inscripcion.objects.count(), count_antes)
+
+    # --- update ---
+
+    def test_update_estado_invalido_retorna_error(self):
+        errors = self.inscripcion.update("inexistente")
+        self.assertTrue(len(errors) > 0)
+
+    def test_update_cancelar_cambia_estado(self):
+        errors = self.inscripcion.update("cancelada")
+        self.assertEqual(errors, [])
+        self.inscripcion.refresh_from_db()
+        self.assertEqual(self.inscripcion.estado, "cancelada")
+
+    def test_update_cancelar_conserva_numero_puesto(self):
+        self.inscripcion.update("cancelada")
+        self.inscripcion.refresh_from_db()
+        self.assertEqual(self.inscripcion.numero_puesto, 1)
+
+    def test_update_cancelar_promueve_lista_espera(self):
+
+        #lleno la lista
+        Inscripcion.new(self.emp2, self.feria, self.user_admin)
+        # anotar uno que queda en lista de espera
+        en_espera, _ = Inscripcion.new(self.emp3, self.feria, self.user_admin)
+
+        # cancelar la inscripcion 1
+        self.inscripcion.update("cancelada")
+
+        # el de lista de espera debe haber confirmado y conseguido el numero de puesto del cancelado (1)
+        en_espera.refresh_from_db()
+        self.assertEqual(en_espera.estado, "confirmada")
+        self.assertIsNotNone(en_espera.numero_puesto)
+        self.assertEqual(en_espera.numero_puesto, 1)
+
+
