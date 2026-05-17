@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Emprendedores — FeriApp{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4">Lista de Emprendedores</h2>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nombre Completo</th>
+                <th>Rubro</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in emprendedores %}
+                <tr>
+                    <td class="fw-semibold">{{ e.apellido }}, {{ e.nombre }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ e.rubro }}</span>
+                    </td>
+                    <td>{{ e.email }}</td>
+                    <td>{% if e.telefono %}{{ e.telefono }}{% else %}-{% endif %}</td>
+                    <td>
+                        <a href="{% url 'ferias:detalle_emprendedor' e.pk %}" class="btn btn-sm btn-success">Ver Perfil</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No hay emprendedores registrados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

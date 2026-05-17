@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %} Perfil de {{ emprendedor.nombre }} {% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white py-3">
+                <h2 class="h4 mb-0 fw-bold">
+                    Perfil del Emprendedor
+                </h2>
+            </div>
+            <div class="card-body p-4">
+                <h3 class="display-6 text-dark mb-4">{{ emprendedor.nombre }} {{ emprendedor.apellido }}</h3>
+
+                <div class="mb-3 p-3 bg-ligh rounded border-start border-success border-3">
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Rubro</p>
+                    <span class="fs-5 fw-semibold">{{ emprendedor.rubro }}</span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small text-uppercase fw-bold">Email</p>
+                        <span class="fw-medium">{{ emprendedor.email }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-1 text-muted small text-uppercase fw-bold">Teléfono</p>
+                        <span class="fw-medium">{% if emprendedor.telefono %}{{ emprendedor.telefono }}{% else %}-{% endif %}</span>
+                    </div>
+                </div>
+
+                <div class="border-top pt-3 text-muted small mb-4">
+                    <strong>Usuario de Sistema:</strong> @{{ emprendedor.usuario.username }}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'ferias:lista_emprendedores' %}" class="btn btn-secondary">
+                        ← Volver al listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
