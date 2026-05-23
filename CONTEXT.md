@@ -219,3 +219,174 @@ python manage.py loaddata app/fixtures/ferias.json
 python manage.py test -v 2
 python manage.py runserver
 ```
+
+## 📋 Seguimiento Global del Proyecto FeriApp
+
+### 🗄️ 1. Base de Datos y Migraciones
+- [x] Migraciones iniciales creadas y commiteadas.
+- [ ] Todas las migraciones futuras commiteadas y funcionales.
+
+---
+
+### 📦 2. Modelos (`app/models.py`)
+*Patrón obligatorio: todos los modelos deben incluir los métodos `validate()`, `new()` y `update()`.*
+
+- [ ] **Categoria** (nombre, descripcion).
+    - [ ] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `obtener_ferias_activas()` (Retorna las ferias vigentes asociadas a esta categoría).
+
+- [x] **Feria** (nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos, activa).
+    - [x] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `calcular_puestos_disponibles()` (Calcula la capacidad restante restando las inscripciones confirmadas).
+    - [ ] **Método de negocio (Opcional 4)**: `clonar_edicion_anterior()` (Clona la información histórica para una nueva edición anual).
+    
+- [x] **Emprendedor** (nombre, apellido, email, rubro, telefono, usuario).
+    - [x] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `calcular_valoracion_promedio()` (Calcula el puntaje acumulado a partir de las reseñas de visitantes).
+
+- [x] **Visitante** (nombre, apellido, email, usuario, fecha_registro).
+    - [x] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `puede_reseñar_feriante(emprendedor)` (Verifica si el visitante asistió a una feria donde participó el emprendedor antes de permitir escribir la reseña).
+
+- [x] **Inscripcion** (emprendedor, feria, numero_puesto, fecha_inscripcion, estado, registrado_por).
+    - [x] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `cambiar_estado_inscripcion(nuevo_estado)` (Maneja la lógica transicional entre confirmada, lista de espera o cancelada).
+
+- [ ] **Resena** (feriante, visitante, puntaje, comentario, fecha_creacion).
+    - [ ] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `validar_escala_puntaje()` (Valida que la calificación se encuentre estrictamente dentro del rango establecido).
+
+- [ ] **Notificacion** *(Opcional 1)* (usuario, asunto, mensaje, leida, fecha_creacion).
+    - [ ] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `marcar_leida()` (Cambia el estado de visibilidad del mensaje).
+
+- [ ] **Sector** *(Opcional 2)* (edicion, nombre, capacidad_puestos, tiene_conexion_electrica).
+    - [ ] `validate` / `new` / `update` 
+    - [ ] **Método de negocio**: `verificar_disponibilidad_electrica()` (Determina si el sector cuenta con infraestructura para conexiones activas).
+
+---
+
+### ⚙️ 3. Formularios (`app/forms.py`)
+*Requisito: Al menos 2 formularios deben tener validación personalizada.*
+
+- [ ] `RegistroUsuarioForm` (Para el Sign Up de usuarios).
+- [ ] `FeriaForm` (Formulario de creación de feria).
+- [ ] `InscripcionForm` (Formulario de inscripción a una feria).
+- [ ] `ResenaForm` (Para calificar a un emprendedor).
+- [ ] `[Validación Personalizada 1]` aplicada.
+- [ ] `[Validación Personalizada 2]` aplicada.
+
+---
+
+### 🖥️ 4. Vistas (`app/views.py`)
+*Requisito: Únicamente Class Based Views (CBV). Todas protegidas con `@login_required` o `LoginRequiredMixin`.*
+
+- [ ] `HomeView`: Home con estadísticas generales calculadas de la app.
+- [ ] `FeriaListView`: Tabla de ferias con filtro por categoría.
+- [ ] `FeriaDetailView`: Detalle con info, emprendedores y barra de ocupación.
+- [ ] `FeriaCreateView`: Formulario de creación.
+- [x] `EmprendedorListView`: Listado general de emprendedores.
+- [ ] `PerfilUsuarioView` : Perfil de usuario.
+- [ ] `EmprendedorDetailView` : Mustra informacion de los emprendedores.
+- [x] `VisitanteListView`: Listado general de visitantes.
+- [ ] `InscripcionCreateView`: Solicitar inscripción.
+- [ ] `InscripcionListView`: Ver mis inscripciones (para un emprendedor).
+- [ ] `InscripcionDeleteView` / Update: Cancelación de inscripciones.
+- [ ] `ResenaCreateView`: Dejar una reseña.
+- [ ] *(Opcional)* Lógica para clonar ferias (Ediciones).
+- [ ] *(Opcional)* Sección de Feriantes Destacados (calculado por reseñas).
+
+---
+
+### 🎨 5. Templates HTML (`app/templates/`)
+*Requisito: Bootstrap 5 responsivos. Frontend sin uso de Javascript para lógica compleja.*
+
+- [ ] `base.html` (Navbar dinámica: cambia según autenticación).
+- [ ] `home.html` (Renderiza el bloque de estadísticas generales).
+- [ ] **Subcarpeta `ferias/`**
+    - [ ] `lista_ferias.html` (Tabla responsiva de ferias con barra de filtros por categoría).
+    - [ ] `detalle_feria.html` (Muestra el detalle estructurado de la feria y los feriantes asignados).
+    - [ ] `formulario_feria.html` (Interfaz limpia de Bootstrap para creación de ferias).
+- [x] **Subcarpeta `emprendedores/`**
+    - [x] `lista_emprendedores.html` (Tabla Bootstrap con columnas ordenadas y enlaces directos).
+    - [x] `detalle_emprendedor.html` (Ficha limpia del perfil de usuario y rubros comerciales).
+- [x] **Subcarpeta `visitantes/`**
+    - [x] `lista_visitantes.html` (Visualización ordenada de los asistentes al sistema).
+- [ ] **Subcarpeta `inscripciones/`**
+    - [ ] `formulario_inscripcion.html` (Campos adaptados para postularse a puestos).
+    - [ ] `mis_inscripciones.html` (Listado con badges de color según el estado: confirmada/espera/cancelada).
+- [ ] **Subcarpeta `resenas/`**
+    - [ ] `formulario_resena.html` (Campos estructurados para comentarios y puntajes).
+- [x] **Subcarpeta `registration/`** (Ubicada en la raíz de templates)[cite: 31].
+    - [ ] `login.html` (Formulario de inicio de sesión estilizado con Bootstrap y libre de CSS inline).
+    - [ ] `registro.html` (Interfaz de alta de usuarios comunes).
+
+---
+
+### 🌐 6. Enrutamiento (`app/urls.py` y `feriapp/urls.py`)
+- [ ] Ruta de Inicio/home (`/`).
+- [ ] Rutas de Autenticación (`accounts/`) conectadas
+- [ ] Rutas de Ferias (`/ferias/`, `/ferias/<pk>/`, `/ferias/nueva/`).
+- [x] Rutas de Emprendedores (`/emprendedores/`, `/emprendedores/<pk>/`).
+- [x] Rutas de Visitantes (`/visitantes/`).
+- [ ] Rutas de Inscripciones (`/inscripciones/`, `/inscripciones/nueva/`).
+- [ ] Rutas de Reseñas (,`/resenas/``/resenas/nueva/`).
+
+---
+
+### 🔐 7. Autenticación y Permisos
+- [ ] Login funcionando.
+- [ ] Logout funcionando.
+- [ ] Registro (Sign up) funcionando.
+- [ ] Permisos configurables según tipo de usuario (Admin/Organización, Emprendedor, Visitante).
+
+---
+
+### 🛡️ 8. Panel de Administración (`app/admin.py`)
+*Requisito: Usar el default de Django con modelos configurados y personalizados.*
+- [x] `FeriaAdmin` (`list_display`, `list_filter` u otras personalizaciones).
+- [x] `EmprendedorAdmin`.
+- [x] `VisitanteAdmin`.
+- [ ] `CategoriaAdmin`.
+- [ ] `InscripcionAdmin`.
+- [ ] `ResenaAdmin`.
+- [ ] `NotificacionAdmin`
+- [ ] `SectorAdmin`
+
+
+---
+
+### 🧪 9. Tests Unitarios (`app/tests.py`)
+*Requisito: Todos los modelos testeados y con tests pasando.*
+- [ ] Tests de `Feria` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_puestos_disponibles`
+- [x] Tests de `Emprendedor` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_valoracion_promedio`
+- [x] Tests de `Visitante` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_puede_reseñar`
+- [ ] Tests de `Categoria` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_ferias_activas`
+- [ ] Tests de `Inscripcion` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_cambio_estado`
+- [ ] Tests de `Resena` (`validate`, `new`, `update`).
+    - [ ] `test_metodo_escala_puntaje`
+
+---
+
+### 📦 10. Archivos Estáticos y Datos de Carga (`app/fixtures/`)
+*Estrategia grupal para estandarizar el desarrollo y asegurar uniformidad en las pruebas internas.*
+
+- [ ] **Crear el archivo base `app/fixtures/initial_data.json`** conteniendo los registros semilla idénticos para todo el equipo:
+    - [ ] Usuarios del sistema preconfigurados (Admin, Staff, Cuentas de prueba).
+    - [ ] Mínimo 3 instancias completas de la clase `Categoria`.
+    - [ ] Mínimo 3 instancias completas de la clase `Feria` distribuidas por fechas.
+    - [ ] Mínimo 3 instancias completas de la clase `Emprendedor` vinculadas a sus usuarios.
+    - [ ] Mínimo 3 instancias completas de la clase `Visitante` vinculadas a sus usuarios.
+- [ ] **Documentar el comando de carga** en el archivo principal de lectura para el equipo: `python manage.py loaddata initial_data`.
+
+---
+
+### 📝 11. Documentación y Control de Versiones
+- [x] Repositorio forkeado correctamente.
+- [ ] `README.md` actualizado con documentación del proyecto.
+- [ ] Entrega por mail con formato exacto: `"GRUPO X - [Tipo de proyecto] - Entrega N° X"`.
