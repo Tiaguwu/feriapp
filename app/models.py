@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from datetime import date
+from xml.parsers.expat import errors
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -12,7 +13,7 @@ class Feria(models.Model):
     """Representa una feria con su período, ubicación y capacidad disponible."""
 
     nombre = models.CharField(max_length=200)
-    categoria = models.CharField(max_length=100)
+    categorias = models.ManyToManyField(Categoria, related_name="ferias")
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     ubicacion = models.CharField(max_length=200)
@@ -368,3 +369,16 @@ class Inscripcion(models.Model):
                 self.estado = nuevo_estado
                 self.save()
         return []
+
+class Categoria(models.Model):
+    """Categoría de una feria."""
+    
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=False null=False)
+    activa = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Categoría"
+        verbose_name_plural = "Categorías"
+        ordering = ["nombre"]
+    
