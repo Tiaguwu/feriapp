@@ -382,3 +382,52 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorías"
         ordering = ["nombre"]
     
+    def __str__(self):
+        return self.nombre
+    
+    @classmethod
+    def validate(cls, nombre, descripcion=""):
+        """
+        Valida los datos de la categoría.
+        Retorna lista de errores (vacía si es válido).
+        """
+        errors = []
+        
+        if not nombre or not nombre.strip():
+            errors.append("El nombre de la categoría es obligatorio.")
+        
+        if not descripcion or not descripcion.strip():
+            errors.append("La descripción de la categoría es obligatoria.")
+    
+
+        return errors
+    
+    @classmethod
+    def new(cls, nombre, descripcion=""):
+        """
+        Crea una nueva categoría si los datos son válidos.
+        Retorna (instancia, errors).
+        """
+        errors = cls.validate(nombre, descripcion)
+        if errors:
+            return None, errors
+        
+        categoria = cls.objects.create(
+            nombre=nombre.strip(),
+            descripcion=descripcion.strip()
+        )
+        return categoria, []
+    
+    def update(self, nombre, descripcion=""):
+        """
+        Actualiza la categoría si los datos son válidos.
+        Retorna lista de errores.
+        """
+        errors = self.__class__.validate(nombre, descripcion)
+        if errors:
+            return errors
+        
+        self.nombre = nombre.strip()
+        self.descripcion = descripcion.strip()
+        self.save()
+        return []
