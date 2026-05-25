@@ -24,6 +24,9 @@
       {% for feria in ferias %}
       <tr>
         <td class="fw-semibold">{{ feria.nombre }}</td>
+        <td>
+          <a href="{% url 'app:detalle_feria' feria.id %}" class="btn btn-sm btn-primary">Ver detalles</a>
+        </td>
         <td>{{ feria.categoria }}</td>
         <td>{{ feria.fecha_inicio }} → {{ feria.fecha_fin }}</td>
         <td>{{ feria.ubicacion }}</td>
