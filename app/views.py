@@ -42,6 +42,12 @@ class ListaVisitanteView(ListView):
     model = Visitante
     template_name = "visitantes/lista_visitantes.html"
     context_object_name = "visitantes"
+
+class DetalleFeriaView(DetailView):
+    model = Feria
+    template_name = "ferias/detalle_feria.html"
+    context_object_name = "feria"
+
 # TODO: implementar las siguientes vistas:
 # class DetalleFeriaView(DetailView): ...
 # class NuevaFeriaView(CreateView): ...
