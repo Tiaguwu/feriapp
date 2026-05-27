@@ -185,7 +185,7 @@ class Visitante(models.Model):
     nombre = models.CharField(max_length=200)
     apellido = models.CharField(max_length=200)
     email = models.EmailField(unique=True)
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name = 'perfil_visitante')
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -241,7 +241,7 @@ class Emprendedor(models.Model):
     email = models.EmailField(unique=True)
     rubro = models.CharField(max_length=200)
     telefono = models.CharField(max_length=17, blank=True, null=True)
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name = 'perfil_emprendedor')
 
     class Meta:
         verbose_name = "Emprendedor"
