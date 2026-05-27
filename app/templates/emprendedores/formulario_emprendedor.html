@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if form.instance.pk %}
+                            Editar Emprendedor
+                        {% else %} 
+                            Registrar Emprendedor
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">{{ field.label }}</label>
+
+                            {{ field }}
+
+                            {% if field.errors %}
+                                {% for error in fields.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        
+                        {% if form.instance.pk%}
+                            <a href="{% url 'ferias:detalle_emprendedor' form.instance.pk %}" class="btn btn-secondary">Cancelar</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-secondary">Cancelar</a>
+                        {% endif%}
+
+                        <button type="submit" class="btn btn-success">
+                            {% if form.instance.pk %}
+                                Guardar Cambios
+                            {% else %}
+                                Completar Registro
+                            {% endif %}
+                        </button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
