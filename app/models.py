@@ -116,7 +116,7 @@ class Feria(models.Model):
         if not nombre or not nombre.strip():
             errors.append("El nombre es obligatorio.")
 
-        if not categoria or not categoria.strip():
+        if not categoria:
             errors.append("La categoría es obligatoria.")
 
         if not ubicacion or not ubicacion.strip():
@@ -146,12 +146,14 @@ class Feria(models.Model):
 
         feria = cls.objects.create(
             nombre=nombre.strip(),
-            categoria=categoria.strip(),
             fecha_inicio=fecha_inicio,
             fecha_fin=fecha_fin,
             ubicacion=ubicacion.strip(),
             capacidad_puestos=capacidad_puestos,
         )
+        if categoria:
+            feria.categorias.add(categoria)
+
         return feria, []
 
     def update(
@@ -168,11 +170,14 @@ class Feria(models.Model):
             return errors
 
         self.nombre = nombre.strip()
-        self.categoria = categoria.strip()
         self.fecha_inicio = fecha_inicio
         self.fecha_fin = fecha_fin
         self.ubicacion = ubicacion.strip()
         self.capacidad_puestos = capacidad_puestos
+        if categoria:
+            # Limpiar categorías existentes y agregar la nueva
+            self.categorias.clear()
+            self.categorias.add(categoria)
         self.save()
         return []
 

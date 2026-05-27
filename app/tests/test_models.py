@@ -17,14 +17,23 @@ class FeriaModelTest(TestCase):
 
     def setUp(self):
         """Crea una feria base reutilizable para cada caso de prueba."""
+        # Crear una categoría primero
+        self.categoria = Categoria.objects.create(
+            nombre="Artesanías",
+            descripcion="Ferias de artesanos"
+        )
+    
+        # Crear la feria SIN el campo categoria
         self.feria = Feria.objects.create(
             nombre="Feria de Invierno",
-            categoria="Artesanías",
             fecha_inicio=date(2026, 7, 1),
             fecha_fin=date(2026, 7, 3),
             ubicacion="Plaza Central",
             capacidad_puestos=10,
         )
+    
+        # Asignar la categoría a la feria
+        self.feria.categorias.add(self.categoria)
 
     # --- __str__ y métodos simples ---
 
@@ -89,9 +98,11 @@ class FeriaModelTest(TestCase):
     # --- new ---
 
     def test_new_crea_feria_con_datos_validos(self):
+        """Verifica que new() crea una feria con datos válidos."""
+        # Usar la categoría que ya existe en self.categoria (creada en setUp)
         feria, errors = Feria.new(
             "Mercado de Diseño",
-            "Artesanías",
+            self.categoria,  # ← Usar la categoría existente, no crear una nueva
             date(2026, 8, 1),
             date(2026, 8, 3),
             "Muelle Turístico",
@@ -114,7 +125,7 @@ class FeriaModelTest(TestCase):
     def test_update_modifica_datos_correctamente(self):
         errors = self.feria.update(
             "Feria de Invierno",
-            "Artesanías",
+            self.categoria,
             date(2026, 7, 1),
             date(2026, 7, 3),
             "Parque Central",
@@ -325,15 +336,26 @@ class InscripcionModelTest(TestCase):
         )
         # Usuario que registra la inscripción
         self.user_admin = User.objects.create_user(username='admin_user', password='123')
-        # Feria con capacidad para 2 puestos
+        
+        # Crear una categoría primero
+        self.categoria = Categoria.objects.create(
+            nombre="Artesanías",
+            descripcion="Ferias de artesanos"
+        )
+    
+        # Crear la feria SIN el campo categoria
         self.feria = Feria.objects.create(
             nombre="Feria de Invierno",
-            categoria="Artesanías",
             fecha_inicio=date(2026, 7, 1),
             fecha_fin=date(2026, 7, 3),
             ubicacion="Plaza Central",
             capacidad_puestos=2
         )
+    
+        # Asignar la categoría a la feria
+        self.feria.categorias.add(self.categoria)
+    
+        # Crear la inscripción base (después de tener la feria)
         self.inscripcion = Inscripcion.objects.create(
             emprendedor=self.emprendedor,
             feria=self.feria,
@@ -341,7 +363,7 @@ class InscripcionModelTest(TestCase):
             registrado_por=self.user_admin,
             estado="confirmada"
         )
-
+    
         # usuarios extra para tests
         self.user2 = User.objects.create_user(username='emp2', password='123')
         self.emp2 = Emprendedor.objects.create(
