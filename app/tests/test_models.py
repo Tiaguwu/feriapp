@@ -10,20 +10,30 @@ from app.models import Emprendedor
 from app.models import Feria
 from app.models import Visitante
 from app.models import Inscripcion
+from app.models import Categoria
 
 class FeriaModelTest(TestCase):
     """Verifica validaciones y operaciones básicas del modelo Feria."""
 
     def setUp(self):
         """Crea una feria base reutilizable para cada caso de prueba."""
+        # Crear una categoría primero
+        self.categoria = Categoria.objects.create(
+            nombre="Artesanías",
+            descripcion="Ferias de artesanos"
+        )
+    
+        # Crear la feria SIN el campo categoria
         self.feria = Feria.objects.create(
             nombre="Feria de Invierno",
-            categoria="Artesanías",
             fecha_inicio=date(2026, 7, 1),
             fecha_fin=date(2026, 7, 3),
             ubicacion="Plaza Central",
             capacidad_puestos=10,
         )
+    
+        # Asignar la categoría a la feria
+        self.feria.categorias.add(self.categoria)
 
     # --- __str__ y métodos simples ---
 
@@ -88,9 +98,11 @@ class FeriaModelTest(TestCase):
     # --- new ---
 
     def test_new_crea_feria_con_datos_validos(self):
+        """Verifica que new() crea una feria con datos válidos."""
+        # Usar la categoría que ya existe en self.categoria (creada en setUp)
         feria, errors = Feria.new(
             "Mercado de Diseño",
-            "Artesanías",
+            self.categoria,  # ← Usar la categoría existente, no crear una nueva
             date(2026, 8, 1),
             date(2026, 8, 3),
             "Muelle Turístico",
@@ -113,7 +125,7 @@ class FeriaModelTest(TestCase):
     def test_update_modifica_datos_correctamente(self):
         errors = self.feria.update(
             "Feria de Invierno",
-            "Artesanías",
+            self.categoria,
             date(2026, 7, 1),
             date(2026, 7, 3),
             "Parque Central",
@@ -324,15 +336,26 @@ class InscripcionModelTest(TestCase):
         )
         # Usuario que registra la inscripción
         self.user_admin = User.objects.create_user(username='admin_user', password='123')
-        # Feria con capacidad para 2 puestos
+        
+        # Crear una categoría primero
+        self.categoria = Categoria.objects.create(
+            nombre="Artesanías",
+            descripcion="Ferias de artesanos"
+        )
+    
+        # Crear la feria SIN el campo categoria
         self.feria = Feria.objects.create(
             nombre="Feria de Invierno",
-            categoria="Artesanías",
             fecha_inicio=date(2026, 7, 1),
             fecha_fin=date(2026, 7, 3),
             ubicacion="Plaza Central",
             capacidad_puestos=2
         )
+    
+        # Asignar la categoría a la feria
+        self.feria.categorias.add(self.categoria)
+    
+        # Crear la inscripción base (después de tener la feria)
         self.inscripcion = Inscripcion.objects.create(
             emprendedor=self.emprendedor,
             feria=self.feria,
@@ -340,7 +363,7 @@ class InscripcionModelTest(TestCase):
             registrado_por=self.user_admin,
             estado="confirmada"
         )
-
+    
         # usuarios extra para tests
         self.user2 = User.objects.create_user(username='emp2', password='123')
         self.emp2 = Emprendedor.objects.create(
@@ -478,4 +501,126 @@ class InscripcionModelTest(TestCase):
         self.assertIsNotNone(en_espera.numero_puesto)
         self.assertEqual(en_espera.numero_puesto, 1)
 
+class CategoriaModelTest(TestCase):
+    """Verifica validaciones y operaciones básicas del modelo Categoria."""
+
+    def setUp(self):
+        """Crea una categoría base reutilizable para cada caso de prueba."""
+        self.categoria = Categoria.objects.create(
+            nombre="Tecnología",
+            descripcion="Ferias relacionadas con tecnología e innovación",
+        )
+
+    # --- __str__ y metadatos ---
+
+    def test_str_retorna_nombre(self):
+        """Verifica que el método __str__ devuelve el nombre de la categoría."""
+        self.assertEqual(str(self.categoria), "Tecnología")
+
+    # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        """Verifica que con datos válidos no haya errores."""
+        errors = Categoria.validate(
+            "Artesanía",
+            "Ferias de artesanos y manualidades"
+        )
+        self.assertEqual(errors, [])
+
+    def test_validate_nombre_vacio_retorna_error(self):
+        """Verifica que el nombre vacío genera un error."""
+        errors = Categoria.validate(
+            "",
+            "Descripción válida"
+        )
+        self.assertIn("El nombre de la categoría es obligatorio.", errors)
+
+    def test_validate_descripcion_vacia_retorna_error(self):
+        """Verifica que la descripción vacía genera un error."""
+        errors = Categoria.validate(
+            "Gastronomía",
+            ""
+        )
+        self.assertIn("La descripción de la categoría es obligatoria.", errors)
+
+    def test_validate_nombre_solo_espacios_retorna_error(self):
+        """Verifica que el nombre con solo espacios genera error."""
+        errors = Categoria.validate(
+            "   ",
+            "Descripción válida"
+        )
+        self.assertIn("El nombre de la categoría es obligatorio.", errors)
+
+    def test_validate_descripcion_solo_espacios_retorna_error(self):
+        """Verifica que la descripción con solo espacios genera error."""
+        errors = Categoria.validate(
+            "Moda",
+            "   "
+        )
+        self.assertIn("La descripción de la categoría es obligatoria.", errors)
+
+    # --- new ---
+
+    def test_new_crea_categoria_con_datos_validos(self):
+        """Verifica que new() crea una categoría con datos válidos."""
+        categoria, errors = Categoria.new(
+            "Artesanía",
+            "Ferias de artesanos y productos hechos a mano"
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(categoria)
+        self.assertEqual(categoria.nombre, "Artesanía")
+        self.assertTrue(Categoria.objects.filter(nombre="Artesanía").exists())
+
+    def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
+        """Verifica que new() no crea categoría si los datos son inválidos."""
+        count_antes = Categoria.objects.count()
+        categoria, errors = Categoria.new("", "")
+        self.assertIsNone(categoria)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Categoria.objects.count(), count_antes)
+
+    def test_new_con_nombre_duplicado_deberia_permitir_segun_validate(self):
+        categoria1, _ = Categoria.new("Duplicada", "Descripción 1")
+        
+        # Intentar crear otra con el mismo nombre
+        # Esto debería fallar a nivel de BD
+        with self.assertRaises(Exception):
+            Categoria.objects.create(nombre="Duplicada", descripcion="Descripción 2")
+
+    # --- update ---
+
+    def test_update_modifica_datos_correctamente(self):
+        """Verifica que update() modifica una categoría existente."""
+        errors = self.categoria.update(
+            "Tecnología e Innovación",
+            "Ferias de tecnología, software e innovación digital"
+        )
+        self.assertEqual(errors, [])
+        self.categoria.refresh_from_db()
+        self.assertEqual(self.categoria.nombre, "Tecnología e Innovación")
+        self.assertEqual(self.categoria.descripcion, "Ferias de tecnología, software e innovación digital")
+
+    def test_update_con_datos_invalidos_no_modifica(self):
+        """Verifica que update() no modifica si los datos son inválidos."""
+        nombre_original = self.categoria.nombre
+        descripcion_original = self.categoria.descripcion
+        
+        errors = self.categoria.update("", "")
+        
+        self.assertTrue(len(errors) > 0)
+        self.categoria.refresh_from_db()
+        self.assertEqual(self.categoria.nombre, nombre_original)
+        self.assertEqual(self.categoria.descripcion, descripcion_original)
+
+    def test_update_con_nombre_vacio_retorna_error_y_no_modifica(self):
+        """Verifica que update() con nombre vacío retorna error."""
+        descripcion_original = self.categoria.descripcion
+        
+        errors = self.categoria.update("", "Nueva descripción")
+        
+        self.assertIn("El nombre de la categoría es obligatorio.", errors)
+        self.categoria.refresh_from_db()
+        self.assertEqual(self.categoria.nombre, "Tecnología")
+        self.assertEqual(self.categoria.descripcion, descripcion_original)
 

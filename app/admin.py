@@ -6,9 +6,14 @@ from .models import Feria, Visitante, Emprendedor
 # TODO: reemplazar por @admin.register con list_display, list_filter, search_fields
 @admin.register(Feria)
 class FeriaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'categoria', 'fecha_inicio', 'fecha_fin', 'ubicacion')
-    list_filter = ('categoria', 'fecha_inicio')
+    list_display = ('nombre', 'mostrar_categorias', 'fecha_inicio', 'fecha_fin', 'ubicacion')
+    list_filter = ('fecha_inicio',)  # Sacamos 'categoria' porque ManyToMany no se filtra igual
     search_fields = ('nombre', 'ubicacion')
+    
+    def mostrar_categorias(self, obj):
+        """Muestra las categorías de la feria como lista separada por comas."""
+        return ", ".join([c.nombre for c in obj.categorias.all()])
+    mostrar_categorias.short_description = "Categorías"
 
 @admin.register(Emprendedor)
 class EmprendedorAdmin(admin.ModelAdmin):
