@@ -17,7 +17,9 @@ urlpatterns = [
     path('emprendedores/<int:pk>/editar/', views.EmprendedorUpdateView.as_view(), name='editar_emprendedor'),
     
     path("visitantes/", views.ListaVisitanteView.as_view(), name="lista_visitantes"),
-    
+    path("visitantes/nuevo/", views.VisitanteCreateView.as_view(), name="crear_visitante"),
+    path("visitantes/<int:pk>/editar/", views.VisitanteUpdateView.as_view(), name="editar_visitante"),
+
     # TODO:
     # path("ferias/<int:pk>/", views.DetalleFeriaView.as_view(), name="detalle_feria"),
     # path("ferias/nueva/", views.NuevaFeriaView.as_view(), name="nueva_feria"),
