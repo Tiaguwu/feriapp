@@ -10,7 +10,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 
 from .models import Feria, Emprendedor, Visitante
-from .forms import EmprendedorForm
+from .forms import EmprendedorForm, VisitanteForm
 
 
 class HomeView(TemplateView):
@@ -72,7 +72,7 @@ class EmprendedorUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     form_class = EmprendedorForm
     template_name = 'emprendedores/formulario_emprendedor.html'
     success_url = reverse_lazy('ferias:lista_emprendedores')
-    success_message = "Los datos del emprendedor se actualizaron correctamente."
+    success_message = "Tus datos se actualizaron correctamente."
 
     # --- VISITANTE ---
 class ListaVisitanteView(ListView):
@@ -86,6 +86,32 @@ class DetalleFeriaView(DetailView):
     template_name = "ferias/detalle_feria.html"
     context_object_name = "feria"
 
+class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Visitante
+    form_class = VisitanteForm
+    template_name = 'visitantes/formulario_visitante.html'
+
+    success_url = reverse_lazy('ferias:lista_visitantes')
+
+    success_message = "Visitante creado exitosamente."
+
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+
+        return super().form_valid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and hasattr(request.user, 'perfil_visitante'):
+
+            return redirect('ferias:editar_visitante', pk=request.user.perfil_visitante.pk)
+        return super().dispatch(request, *args, **kwargs)
+    
+class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = Visitante
+    form_class = VisitanteForm
+    template_name = 'visitantes/formulario_visitante.html'
+    succes_url = reverse_lazy('ferias:lista_visitantes')
+    success_message = "Tus datos se actualizaron correctamente."
 
     # --- USUARIO ---
 class RegistroView(CreateView):
