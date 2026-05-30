@@ -6,6 +6,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 
 from .models import Feria, Emprendedor, Visitante
 from .forms import EmprendedorForm
@@ -41,7 +43,7 @@ class DetalleEmprendedorView(DetailView):
     template_name = "emprendedores/detalle_emprendedor.html"
     context_object_name = "emprendedor"
 
-class EmprendedorCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Emprendedor
     form_class = EmprendedorForm
     template_name = 'emprendedores/formulario_emprendedor.html'
@@ -60,7 +62,7 @@ class EmprendedorCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView)
     
     # Método para atajar a los duplicados
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and hasattr(request.user, 'emprendedor'):
+        if request.user.is_authenticated and hasattr(request.user, 'perfil_emprendedor'):
             # Si ya es emprendedor, lo mandamos a editar su perfil en vez de crear uno nuevo
             return redirect('ferias:editar_emprendedor', pk=request.user.perfil_emprendedor.pk)
         return super().dispatch(request, *args, **kwargs)
@@ -84,6 +86,26 @@ class DetalleFeriaView(DetailView):
     template_name = "ferias/detalle_feria.html"
     context_object_name = "feria"
 
+
+    # --- USUARIO ---
+class RegistroView(CreateView):
+    template_name = 'registration/registro.html'
+    form_class = UserCreationForm
+    success_url = reverse_lazy('elegir_rol')
+
+    # Interceptamos el momento exacto en que el formulario es válido para loguearlo
+    def form_valid(self, form):
+
+        # Guarda al usuario en la base de datos
+        response = super().form_valid(form)
+
+        # Contiene al usuario que se acaba de crear mágicamente
+        login(self.request, self.object)
+
+        return response
+
+class ElegirRolView(TemplateView):
+    template_name = 'registration/elegir_rol.html'
 # TODO: implementar las siguientes vistas:
 # class DetalleFeriaView(DetailView): ...
 # class NuevaFeriaView(CreateView): ...

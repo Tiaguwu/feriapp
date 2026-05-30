@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block body_class %}bg-login-especial{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+    <div class="container vh-100">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="col-lg-4 col-md-7 col-sm-10">
+                <div class="login-card p-5 rounded-4 text-center">
+
+                    <h3 class="text-white fw-bold mb-4 login-title">Crear Cuenta</h3>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                            <div class="alert text-white small mb-4 rounded-3 login-alert text-start">
+                                Por favor corrija los siguientes errores:
+                                <ul class="mb-0 mt-1 ps3">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-4 text-start">
+                            <input type="text" name="username" class="form-control px-3" placeholder="Nombre de usuario" required>
+                        </div>
+
+                        <div class="mb-4 text-start">
+                            <input type="password" name="password1" class="form-control px-3" placeholder="Contraseña" required>
+                        </div>
+
+                        <div class="mb-4 text-start">
+                            <input type="password" name="password2" class="form-control px-3" placeholder="Confirmar contraseña" required>
+                        </div>
+
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-login rounder-3 fw-semibold py-2">Registrarse</button>
+                        </div>
+                    </form>
+
+                    <p class="mb-0 text-white-50 small">
+                        ¿Ya tenés una cuenta?
+                        <a href="{% url 'login' %}" class="login-link">Iniciá Sesión</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
