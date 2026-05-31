@@ -70,52 +70,63 @@ class VisitanteForm(forms.ModelForm):
 
 
 
-class FeriaForm(forms.Form):
-    """Formulario para crear una nueva feria."""
+class FeriaForm(forms.ModelForm):
+    """Formulario para crear/editar una feria."""
     
-    nombre = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    
-    categoria = forms.ModelChoiceField(
-        queryset=Categoria.objects.filter(activa=True),
-        empty_label="Seleccione una categoría",
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
-    fecha_inicio = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    
-    fecha_fin = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    
-    ubicacion = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    
-    capacidad_puestos = forms.IntegerField(
-        min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
+    class Meta:
+        model = Feria
+        fields = ['nombre', 'categorias', 'fecha_inicio', 'fecha_fin', 'ubicacion', 'capacidad_puestos']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese el nombre de la feria'
+            }),
+            'categorias': forms.SelectMultiple(attrs={
+                'class': 'form-select'
+            }),
+            'fecha_inicio': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'fecha_fin': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'ubicacion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Plaza Central, Salón Municipal'
+            }),
+            'capacidad_puestos': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Cantidad de puestos (mínimo 1)'
+            }),
+        }
+        labels = {
+            'nombre': 'Nombre de la feria',
+            'categorias': 'Categorías',
+            'fecha_inicio': 'Fecha de inicio',
+            'fecha_fin': 'Fecha de fin',
+            'ubicacion': 'Ubicación',
+            'capacidad_puestos': 'Capacidad de puestos',
+        }
     
     def clean(self):
         """Validación a nivel de formulario usando el modelo."""
         cleaned_data = super().clean()
         
         nombre = cleaned_data.get('nombre')
-        categoria = cleaned_data.get('categoria')
+        categorias = cleaned_data.get('categorias')  # QuerySet de Categoria
         fecha_inicio = cleaned_data.get('fecha_inicio')
         fecha_fin = cleaned_data.get('fecha_fin')
         ubicacion = cleaned_data.get('ubicacion')
         capacidad_puestos = cleaned_data.get('capacidad_puestos')
         
-        # Usar el método validate del modelo Feria
+        # Como validate() espera UNA categoría, tomamos la primera si existe
+        # Esto es temporal hasta que se decida si se soportan múltiples categorías
+        primera_categoria = categorias.first() if categorias and categorias.exists() else None
+        
         errors = Feria.validate(
-            nombre, categoria, fecha_inicio, fecha_fin,
+            nombre, primera_categoria, fecha_inicio, fecha_fin,
             ubicacion, capacidad_puestos
         )
         
