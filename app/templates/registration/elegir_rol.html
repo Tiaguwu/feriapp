@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block body_class %}bg-login-especial{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="containter min-vh-100 py-5">
+    <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-lg-8 text-center">
+
+            <h2 class="text-white fw-bold mb-5">
+                ¡Te damos la bienvenida a FeriApp!
+            </h2>
+            <p class="text-white-50 mb-5 fs-5">
+                Para terminar de configurar tu cuenta, decinos qué querés hacer:
+            </p>
+
+            <div class="row justify-content-center">
+                <div class="col-md-5 mb-4">
+                    <div class="login-card p-4 rounded-4 text-center h-100 rol-card">
+                        <div class="rol-emoji display-1 mb-3">👨‍💼</div>
+                        <h4 class="text-white fw-bold">Soy Emprendedor</h4>
+                        <p class="text-white-50 mb-4 small">Quiero participar en las ferias y que nuevos clientes me conozcan.</p>
+                        <a href="{% url 'ferias:crear_emprendedor' %}" class="btn btn-warning w-100 fw-bold py-2 rounded-3">Crear Perfil Emprendedor</a>
+                    </div>
+                </div>
+
+                <div class="col-md-5 mb-4">
+                    <div class="login-card p-4 rounded-4 text-center h-100 rol-card">
+                        <div class="rol-emoji display-1 mb-3">🛍️</div>
+                        <h4 class="text-white fw-bold">Soy Visitante</h4>
+                        <p class="text-white-50 mb-4 small">Quiero explorar las ferias activas y descubrir emprendedores locales.</p>
+                        <a href="{%url 'ferias:crear_visitante' %}" class="btn btn-warning w-100 fw-bold py-2 rounded-3">Crear Perfil Visitante</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

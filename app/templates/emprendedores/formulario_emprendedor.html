@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block body_class %}{% if not form.instance.pk %}bg-login-especial{% endif %}{% endblock %}
+
+{% block navbar %}
+    {% if form.instance.pk %}
+        {{ block.super }}
+    {%endif%}
+{% endblock %}
+
+{% block footer %}
+    {% if form.instance.pk %}
+        {{ block.super }}
+    {%endif%}
+{% endblock %}
+
+{% block content %}
+<div class="container {% if not form.instance.pk %}vh-100 d-flex align-items-center{% else %}mt-5{% endif %}">
+    <div class="row justify-content-center w-100 m-0">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="{% if not form.instance.pk %}login-card text-center p-4 rounded-4{% else %}card shadow-sm{% endif %}">
+
+                {% if form.instance.pk %}
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            Editar Emprendedor
+                        </h4>
+                    </div>
+                {% else %}
+                    <h3 class="text-white fw-bold mb-4 login-title">Registrar Emprendedor</h3>
+                {% endif %}
+
+                <div class="{% if form.instance.pk %}card-body{% else %}p-2 text-start{% endif %}">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold {% if not form.instance.pk %}text-white-50 small{% endif %}">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            {% if form.instance.pk%}
+                                <a href="{% url 'ferias:detalle_emprendedor' form.instance.pk %}" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                            {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-outline-light">Cancelar</a>
+                                <button type="submit" class="btn btn-warning fw-bold">Completar Registro</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
