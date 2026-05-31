@@ -1,3 +1,5 @@
+from pyexpat import errors
+
 from django import forms
 from .models import Emprendedor, Visitante, Feria, Categoria
 from django.core.exceptions import ValidationError
@@ -111,27 +113,23 @@ class FeriaForm(forms.ModelForm):
         }
     
     def clean(self):
-        """Validación a nivel de formulario usando el modelo."""
         cleaned_data = super().clean()
-        
+    
         nombre = cleaned_data.get('nombre')
         categorias = cleaned_data.get('categorias')  # QuerySet de Categoria
         fecha_inicio = cleaned_data.get('fecha_inicio')
         fecha_fin = cleaned_data.get('fecha_fin')
         ubicacion = cleaned_data.get('ubicacion')
         capacidad_puestos = cleaned_data.get('capacidad_puestos')
-        
-        # Como validate() espera UNA categoría, tomamos la primera si existe
-        # Esto es temporal hasta que se decida si se soportan múltiples categorías
-        primera_categoria = categorias.first() if categorias and categorias.exists() else None
-        
+    
+        # Pasar todas las categorías a validate (no solo una)
         errors = Feria.validate(
-            nombre, primera_categoria, fecha_inicio, fecha_fin,
+            nombre, categorias, fecha_inicio, fecha_fin,
             ubicacion, capacidad_puestos
         )
-        
+    
         if errors:
             for error in errors:
                 raise ValidationError(error)
-        
+    
         return cleaned_data
