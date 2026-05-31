@@ -203,8 +203,11 @@ class Visitante(models.Model):
             errors.append("El nombre es obligatorio.")
         if not apellido or not apellido.strip():
             errors.append("El apellido es obligatorio.")
+
         if not email or not email.strip():
             errors.append("El email es obligatorio.")
+        elif cls.objects.filter(email=email.strip()).exists():
+            errors.append("Ya existe un visitante registrado con ese email.")
         if not usuario:
             errors.append("El usuario asociado es obligatorio.")
         return errors
@@ -215,13 +218,18 @@ class Visitante(models.Model):
         if errors:
             return None, errors
         
-        visitante = cls.objects.create(
-            nombre=nombre.strip(),
-            apellido=apellido.strip(),
-            email=email.strip(),
-            usuario=usuario
-        )
-        return visitante, []
+        try:
+            # Envolvemos la creación en un bloque atómico por seguridad transaccional
+            with transaction.atomic():
+                visitante = cls.objects.create(
+                    nombre=nombre.strip(),
+                    apellido=apellido.strip(),
+                    email=email.strip(),
+                    usuario=usuario
+                )
+                return visitante, []
+        except Exception as e:
+            return None, [f"Error interno de base de datos al guardar: {str(e)}"]
 
     def update(self, nombre, apellido, email):
         errors = self.__class__.validate(nombre, apellido, email, self.usuario)
@@ -258,8 +266,12 @@ class Emprendedor(models.Model):
             errors.append("El nombre es obligatorio.")
         if not apellido or not apellido.strip():
             errors.append("El apellido es obligatorio.")
+
         if not email or not email.strip():
             errors.append("El email es obligatorio.")
+        elif cls.objects.filter(email=email.strip()).exists():
+            errors.append("Ya existe un emprendedor registrado con ese email.")
+
         if not rubro or not rubro.strip():
             errors.append("El rubro es obligatorio.")
         if not telefono or not telefono.strip():
@@ -274,15 +286,20 @@ class Emprendedor(models.Model):
         if errors:
             return None, errors
         
-        emprendedor = cls.objects.create(
-            nombre=nombre.strip(),
-            apellido=apellido.strip(),
-            email=email.strip(),
-            rubro=rubro.strip(),
-            telefono=telefono.strip(),
-            usuario=usuario,
-        )
-        return emprendedor, []
+        try:
+            # Envolvemos la creación en un bloque atómico por seguridad transaccional
+            with transaction.atomic():
+                emprendedor = cls.objects.create(
+                    nombre=nombre.strip(),
+                    apellido=apellido.strip(),
+                    email=email.strip(),
+                    rubro=rubro.strip(),
+                    telefono=telefono.strip(),
+                    usuario=usuario,
+                )
+                return emprendedor, []
+        except Exception as e:
+            return None, [f"Error interno de base de datos al guardar: {str(e)}"]
 
     def update(self, nombre, apellido, email, rubro, telefono):
         errors = self.__class__.validate(nombre, apellido, email, rubro, telefono, self.usuario)
