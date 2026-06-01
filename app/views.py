@@ -50,15 +50,19 @@ class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
 
     # Redirecciona a la lista de emprendedores cuando todo sale bien
     success_url = reverse_lazy('ferias:lista_emprendedores')
-
     success_message = "Emprendedor creado exitosamente."
 
     def form_valid(self, form):
-        # Asignamos el usuario que hizo la petición web (el que está logueado) 
-        # a la instancia del emprendedor antes de guardarlo en la base de datos.
-        form.instance.usuario = self.request.user
-        
-        return super().form_valid(form)
+        # Invocamos el save personalizado enviando al usuario logueado
+        emprendedor = form.save(usuario=self.request.user)
+
+        # Si el modelo encontró errores en validate(), retornará None
+        if not emprendedor:
+            # Renderiza de nuevo el formulario mostrando los non_field_errors
+            return self.form_invalid(form)
+    
+        self.object = emprendedor
+        return redirect(self.get_success_url())
     
     # Método para atajar a los duplicados
     def dispatch(self, request, *args, **kwargs):
@@ -73,6 +77,26 @@ class EmprendedorUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     template_name = 'emprendedores/formulario_emprendedor.html'
     success_url = reverse_lazy('ferias:lista_emprendedores')
     success_message = "Tus datos se actualizaron correctamente."
+
+    def form_valid(self, form):
+        emprendedor = self.get_object()  # Obtenemos el emprendedor que se está editando
+
+        # Llamamos al método .update() del modelo pasándole los datos limpios del form
+        errors = emprendedor.update(
+            nombre=form.cleaned_data['nombre'],
+            apellido=form.cleaned_data['apellido'],
+            email=form.cleaned_data['email'],
+            rubro=form.cleaned_data['rubro'],
+            telefono=form.cleaned_data['telefono']
+        )
+
+        if errors:
+            # Si el método update del modelo encuentra errores, los agregamos al form
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+
+        return redirect(self.get_success_url())
 
     # --- VISITANTE ---
 class ListaVisitanteView(ListView):
@@ -96,9 +120,13 @@ class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     success_message = "Visitante creado exitosamente."
 
     def form_valid(self, form):
-        form.instance.usuario = self.request.user
+        visitante = form.save(usuario=self.request.user)
 
-        return super().form_valid(form)
+        if not visitante:
+            return self.form_invalid(form)
+        
+        self.object = visitante
+        return redirect(self.get_success_url())
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and hasattr(request.user, 'perfil_visitante'):
@@ -110,8 +138,24 @@ class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Visitante
     form_class = VisitanteForm
     template_name = 'visitantes/formulario_visitante.html'
-    succes_url = reverse_lazy('ferias:lista_visitantes')
+    success_url = reverse_lazy('ferias:lista_visitantes')
     success_message = "Tus datos se actualizaron correctamente."
+
+    def form_valid(self, form):
+        visitante = self.get_object()
+
+        errors = visitante.update(
+            nombre=form.cleaned_data['nombre'],
+            apellido=form.cleaned_data['apellido'],
+            email=form.cleaned_data['email']
+        )
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+
+        return redirect(self.get_success_url())
 
     # --- USUARIO ---
 class RegistroView(CreateView):
@@ -123,12 +167,14 @@ class RegistroView(CreateView):
     def form_valid(self, form):
 
         # Guarda al usuario en la base de datos
-        response = super().form_valid(form)
+        # Al hacer form.save(), Django crea el User y lo asigna a self.object
+        user = form.save()
 
-        # Contiene al usuario que se acaba de crear mágicamente
-        login(self.request, self.object)
+        # Logueamos al usuario manualmente en la sesión actual
+        login(self.request, user)
 
-        return response
+        # Redirigimos al success_url de forma segura
+        return redirect(self.get_success_url())
 
 class ElegirRolView(TemplateView):
     template_name = 'registration/elegir_rol.html'

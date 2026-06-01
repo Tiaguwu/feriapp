@@ -178,7 +178,7 @@ class EmprendedorModelTest(TestCase):
         errors = Emprendedor.validate(
             self.emprendedor.nombre, 
             self.emprendedor.apellido, 
-            self.emprendedor.email, 
+            "tiago_nuevo@ejemmplo.com", # Email diferente para evitar conflicto
             self.emprendedor.rubro, 
             self.emprendedor.telefono, 
             self.emprendedor.usuario
@@ -200,6 +200,18 @@ class EmprendedorModelTest(TestCase):
             "Tiago", "C", "t@t.com", "Rubro", "123", None
         )
         self.assertIn("El usuario asociado es obligatorio.", errors)
+
+    def test_validate_email_duplicado_retorna_error(self):
+        user_nuevo = User.objects.create_user(username='user_nuevo', password='123')
+        errors = Emprendedor.validate(
+            "Pedro",
+            "Gomez",
+            "tiago@ejemplo.com", # Email que ya existe en el setUp
+            "Gastronomia",
+            "2901445556",
+            user_nuevo
+        )
+        self.assertIn("Ya existe un emprendedor registrado con ese email.", errors)
 
     # --- new ---
 
@@ -228,7 +240,7 @@ class EmprendedorModelTest(TestCase):
         errors = self.emprendedor.update(
             "Tiago Editado",
             "Caranchi",
-            "TiagoC@ejemplo,com",
+            "TiagoC@ejemplo.com",
             "Muebles",
             "2901000000"
         )
@@ -267,7 +279,7 @@ class VisitanteModelTest(TestCase):
         errors = Visitante.validate(
             self.visitante.nombre,
             self.visitante.apellido,
-            self.visitante.email,
+            "tiago_visitante@ejemplo.com",
             self.visitante.usuario
         )
         self.assertEqual(errors, [])
@@ -288,7 +300,16 @@ class VisitanteModelTest(TestCase):
         )
         self.assertIn("El usuario asociado es obligatorio.", errors)
 
-    
+    def test_validate_email_duplicado_retorna_error(self):
+        user_nuevo = User.objects.create_user(username='user_nuevo_v', password='123')
+        errors = Visitante.validate(
+            "Pedro",
+            "Gomez",
+            "tiago@ejemplo.com",
+            user_nuevo
+        )
+        self.assertIn("Ya existe un visitante registrado con ese email.", errors)
+
     # --- new ---
 
     def test_new_con_datos_validos(self):
