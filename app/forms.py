@@ -42,6 +42,25 @@ class EmprendedorForm(forms.ModelForm):
             raise forms.ValidationError("El telefono solo puede contener numeros, sin espacios ni guiones.")
         
         return telefono
+    
+    def save(self, usuario, commit=True):
+        # Interceptamos el save para usar la lógica atómica del modelo
+        if commit:
+            # Invocamos el método de creación del modelo pasándole el usuario logueado
+            emprendedor, errors = Emprendedor.new(
+                nombre=self.cleaned_data['nombre'],
+                apellido=self.cleaned_data['apellido'],
+                email=self.cleaned_data['email'],
+                telefono=self.cleaned_data['telefono'],
+                rubro=self.cleaned_data['rubro'],
+                usuario=usuario
+            )
+            if errors:
+                for error in errors:
+                    self.add_error(None, error)  # Agrega errores no asociados a un campo específico
+                return None
+            return emprendedor
+        return super().save(commit=commit)
 
 class VisitanteForm(forms.ModelForm):
     class Meta:
@@ -68,7 +87,20 @@ class VisitanteForm(forms.ModelForm):
                 raise forms.ValidationError("El apellido no puede contener números.")
         return apellido
 
-
+    def save(self, usuario, commit=True):
+        if commit:
+            visitante, errors = Visitante.new(
+                nombre=self.cleaned_data['nombre'],
+                apellido=self.cleaned_data['apellido'],
+                email=self.cleaned_data['email'],
+                usuario=usuario
+            )
+            if errors:
+                for error in errors:
+                    self.add_error(None, error)
+                return None
+            return visitante
+        return super().save(commit=commit)
 
 class FeriaForm(forms.Form):
     """Formulario para crear una nueva feria."""
