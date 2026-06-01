@@ -105,45 +105,49 @@ class Feria(models.Model):
 
     @classmethod
     def validate(
-        cls, nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
-    ):
+        cls, nombre, categorias, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
+):
         """
-        Valida los datos de la feria. Retorna una lista de errores.
-        Si la lista está vacía, los datos son válidos.
+        Valida los datos de la feria.
+        categorias: puede ser None, una lista de objetos Categoria, o un QuerySet.
+        Retorna una lista de errores.
         """
         errors = []
-
+    
         if not nombre or not nombre.strip():
             errors.append("El nombre es obligatorio.")
-
-        if not categoria:
-            errors.append("La categoría es obligatoria.")
-
+    
+        # Validar que tenga al menos una categoría
+        if not categorias:
+            errors.append("Debe seleccionar al menos una categoría.")
+        elif hasattr(categorias, 'exists') and not categorias.exists():
+            errors.append("Debe seleccionar al menos una categoría.")
+        elif isinstance(categorias, (list, tuple)) and len(categorias) == 0:
+            errors.append("Debe seleccionar al menos una categoría.")
+    
         if not ubicacion or not ubicacion.strip():
             errors.append("La ubicación es obligatoria.")
-
+    
         if capacidad_puestos is None or capacidad_puestos <= 0:
             errors.append("La capacidad de puestos debe ser mayor a cero.")
-
+    
         if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
             errors.append("La fecha de fin no puede ser anterior a la fecha de inicio.")
-
+    
         return errors
 
     @classmethod
-    def new(
-        cls, nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
-    ):
+    def new(cls, nombre, categorias, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos):
         """
-        Crea y persiste una nueva feria si los datos son válidos.
-        Retorna (instancia, errors). Si hay errores, instancia es None.
+        Crea una nueva feria.
+        categorias: puede ser una lista de objetos Categoria o un QuerySet.
         """
         errors = cls.validate(
-            nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
+            nombre, categorias, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
         )
         if errors:
             return None, errors
-
+    
         feria = cls.objects.create(
             nombre=nombre.strip(),
             fecha_inicio=fecha_inicio,
@@ -151,33 +155,35 @@ class Feria(models.Model):
             ubicacion=ubicacion.strip(),
             capacidad_puestos=capacidad_puestos,
         )
-        if categoria:
-            feria.categorias.add(categoria)
-
+    
+        # Agregar todas las categorías
+        if categorias:
+            feria.categorias.add(*categorias)  # El * desempaqueta la lista/QuerySet
+    
         return feria, []
 
-    def update(
-        self, nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
-    ):
+    def update(self, nombre, categorias, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos):
         """
-        Actualiza los datos de la feria si los datos son válidos.
-        Retorna una lista de errores. Si está vacía, la actualización fue exitosa.
+        Actualiza una feria existente.
+        categorias: puede ser una lista de objetos Categoria o un QuerySet.
         """
         errors = self.__class__.validate(
-            nombre, categoria, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
+            nombre, categorias, fecha_inicio, fecha_fin, ubicacion, capacidad_puestos
         )
         if errors:
             return errors
-
+    
         self.nombre = nombre.strip()
         self.fecha_inicio = fecha_inicio
         self.fecha_fin = fecha_fin
         self.ubicacion = ubicacion.strip()
         self.capacidad_puestos = capacidad_puestos
-        if categoria:
-            # Limpiar categorías existentes y agregar la nueva
+    
+        # Actualizar categorías
+        if categorias is not None:
             self.categorias.clear()
-            self.categorias.add(categoria)
+            self.categorias.add(*categorias)
+    
         self.save()
         return []
 
