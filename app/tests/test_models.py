@@ -1,6 +1,7 @@
 """Tests de comportamiento para el modelo Feria."""
 
 from datetime import date
+from pyexpat import errors
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -52,9 +53,11 @@ class FeriaModelTest(TestCase):
     # --- validate ---
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
+        categorias = Categoria.objects.filter(pk=self.categoria.pk)
+    
         errors = Feria.validate(
             "Tech Patagonia",
-            "Tecnología",
+            categorias,  # ← QuerySet
             date(2026, 9, 1),
             date(2026, 9, 3),
             "Centro Cultural",
@@ -98,16 +101,19 @@ class FeriaModelTest(TestCase):
     # --- new ---
 
     def test_new_crea_feria_con_datos_validos(self):
-        """Verifica que new() crea una feria con datos válidos."""
-        # Usar la categoría que ya existe en self.categoria (creada en setUp)
+        # Crear un QuerySet con la categoría (o una lista)
+        categorias = Categoria.objects.filter(pk=self.categoria.pk)
+        # O también: categorias = [self.categoria]
+    
         feria, errors = Feria.new(
             "Mercado de Diseño",
-            self.categoria,  # ← Usar la categoría existente, no crear una nueva
+            categorias,  # Ahora es un QuerySet o lista
             date(2026, 8, 1),
             date(2026, 8, 3),
             "Muelle Turístico",
             15,
         )
+        
         self.assertEqual(errors, [])
         self.assertIsNotNone(feria)
         self.assertEqual(feria.nombre, "Mercado de Diseño")
@@ -123,9 +129,12 @@ class FeriaModelTest(TestCase):
     # --- update ---
 
     def test_update_modifica_datos_correctamente(self):
+        # Crear un QuerySet con la categoría
+        categorias = Categoria.objects.filter(pk=self.categoria.pk)
+    
         errors = self.feria.update(
             "Feria de Invierno",
-            self.categoria,
+            categorias,  # ← Ahora es un QuerySet
             date(2026, 7, 1),
             date(2026, 7, 3),
             "Parque Central",
