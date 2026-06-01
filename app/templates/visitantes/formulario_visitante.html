@@ -35,6 +35,15 @@
                     <form method="post" novalidate>
                         {% csrf_token %}
 
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show mb-3 text-start" role="alert">
+                            <ul class="mb-0 ps-3">
+                                {% for error in form.non_field_errors %}
+                                <li class="fw-bold small">{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                         {% for field in form %}
                             <div class="mb-3">
                                 <label class="form-label font-weight-bold {% if not form.instance.pk %}text-white-50 small{% endif%}">
