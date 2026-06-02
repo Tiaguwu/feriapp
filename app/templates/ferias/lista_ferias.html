@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2 class="h4">Ferias activas</h2>
-  <!-- TODO: agregar botón "Nueva feria" cuando implementen esa vista -->
+  <a href="{% url 'app:nueva_feria' %}" class="btn btn-primary btn-sm">
+    + Nueva feria
+  </a>
 </div>
 
 <div class="table-responsive">
