@@ -8,9 +8,11 @@ from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.views.generic.edit import CreateView
+
 
 from .models import Feria, Emprendedor, Visitante
-from .forms import EmprendedorForm, VisitanteForm
+from .forms import EmprendedorForm, VisitanteForm, FeriaForm
 
 
 class HomeView(TemplateView):
@@ -178,6 +180,43 @@ class RegistroView(CreateView):
 
 class ElegirRolView(TemplateView):
     template_name = 'registration/elegir_rol.html'
+
+
+class NuevaFeriaView(LoginRequiredMixin, CreateView):
+    """
+    Vista para crear una nueva feria.
+    Requiere usuario autenticado.
+    """
+    form_class = FeriaForm
+    template_name = "ferias/nueva_feria.html"
+    success_url = reverse_lazy('app:lista_ferias')
+    
+    def form_valid(self, form):
+        """
+        Guarda la feria usando el método new() del modelo.
+        El formulario ya validó los datos con Feria.validate()
+        """
+        cleaned_data = form.cleaned_data
+        
+        # Las categorías vienen como QuerySet del formulario
+        categorias = cleaned_data.get('categorias')
+        
+        feria, errors = Feria.new(
+            nombre=cleaned_data['nombre'],
+            categorias=categorias,
+            fecha_inicio=cleaned_data['fecha_inicio'],
+            fecha_fin=cleaned_data['fecha_fin'],
+            ubicacion=cleaned_data['ubicacion'],
+            capacidad_puestos=cleaned_data['capacidad_puestos']
+        )
+        
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+        
+        return super().form_valid(form)
+    
 # TODO: implementar las siguientes vistas:
 # class DetalleFeriaView(DetailView): ...
 # class NuevaFeriaView(CreateView): ...
