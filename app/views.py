@@ -11,7 +11,7 @@ from django.contrib.auth import login
 from django.views.generic.edit import CreateView
 
 
-from .models import Feria, Emprendedor, Visitante
+from .models import Categoria, Feria, Emprendedor, Visitante
 from .forms import EmprendedorForm, VisitanteForm, FeriaForm
 
 
@@ -29,8 +29,27 @@ class ListaFeriasView(ListView):
     context_object_name = "ferias"
 
     def get_queryset(self):
-        """Retorna solo las ferias marcadas como activas."""
-        return Feria.objects.filter(activa=True)
+        """Retorna ferias activas, opcionalmente filtradas por categoría."""
+        queryset = Feria.objects.filter(activa=True)
+        
+        categoria_id = self.request.GET.get('categoria')
+        
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega la lista de categorías al contexto para mostrar en el template."""
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.filter(activa=True)
+        
+        # Para mantener seleccionada la categoría actual en el selector
+        categoria_id = self.request.GET.get('categoria')
+        if categoria_id:
+            context['categoria_seleccionada'] = int(categoria_id)
+        
+        return context
 
     # --- EMPRENDEDOR ---
 
