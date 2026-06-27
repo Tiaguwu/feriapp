@@ -6,6 +6,9 @@ env/
 # Base de datos local
 db.sqlite3
 
+# Scripts locales de desarrollo
+poblar_db.py
+
 # Bytecode
 __pycache__/
 *.py[cod]

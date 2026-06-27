@@ -320,9 +320,6 @@ class Emprendedor(models.Model):
         self.save()
         return []
 
-    # class Categoria(models.Model): ...  ← extraer categoria a FK
-    # class Emprendedor(models.Model): ...
-    # class Inscripcion(models.Model):
 class Inscripcion(models.Model):
     """Representa la inscripicón de un emprendedor a una feria."""
 

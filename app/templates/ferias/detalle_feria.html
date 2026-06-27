@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block titulo %}{{ feria.nombre }}{% endblock %}
+{% block title %}{{ feria.nombre }}{% endblock %}
 
-{% block contenido %}
+{% block content %}
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8">
@@ -45,6 +45,6 @@
         </div>
     </div>
     
-    <a href="{% url 'app:lista_ferias' %}" class="btn btn-secondary mt-3">Volver al listado</a>
+    <a href="{% url 'ferias:lista_ferias' %}" class="btn btn-secondary mt-3">Volver al listado</a>
 </div>
 {% endblock %}

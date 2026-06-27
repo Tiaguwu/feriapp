@@ -11,8 +11,8 @@ from django.contrib.auth import login
 from django.views.generic.edit import CreateView
 
 
-from .models import Categoria, Feria, Emprendedor, Visitante
-from .forms import EmprendedorForm, VisitanteForm, FeriaForm
+from .models import Categoria, Feria, Emprendedor, Inscripcion, Visitante
+from .forms import EmprendedorForm, InscripcionForm, VisitanteForm, FeriaForm
 
 
 class HomeView(TemplateView):
@@ -208,7 +208,7 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
     """
     form_class = FeriaForm
     template_name = "ferias/nueva_feria.html"
-    success_url = reverse_lazy('app:lista_ferias')
+    success_url = reverse_lazy('ferias:lista_ferias')
     
     def form_valid(self, form):
         """
@@ -235,6 +235,41 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
         
         return super().form_valid(form)
+
+class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Inscripcion
+    form_class = InscripcionForm
+    template_name = "inscripciones/nueva_inscripcion.html"
+    success_url = reverse_lazy('ferias:lista_ferias')
+    success_message = "Inscripción realizada exitosamente."
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        feria = form.cleaned_data['feria']
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            # Si es staff o superuser, puede inscribir a cualquier emprendedor
+            emprendedor = form.cleaned_data['emprendedor']
+        else:
+            emprendedor = self.request.user.perfil_emprendedor
+        
+        inscripcion, errors = Inscripcion.new(
+            emprendedor=emprendedor,
+            feria=feria,
+            registrado_por=self.request.user
+        )
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+        
+        self.object = inscripcion
+        return redirect(self.get_success_url())
 
 # TODO: implementar las siguientes vistas:
 # class NuevaInscripcionView(CreateView): ...
