@@ -211,7 +211,7 @@ class VisitanteUpdateView(VisitanteRequiredMixin, SuccessMessageMixin, UpdateVie
         return super().form_valid(form)
 
     # --- USUARIO ---
-class RegistroView(SuccessMessageMixin,CreateView):
+class RegistroView(SuccessMessageMixin, CreateView):
     template_name = 'registration/registro.html'
     form_class = UserCreationForm
     success_url = reverse_lazy('elegir_rol')
