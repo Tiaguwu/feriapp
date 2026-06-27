@@ -21,6 +21,8 @@ urlpatterns = [
     path("visitantes/nuevo/", views.VisitanteCreateView.as_view(), name="crear_visitante"),
     path("visitantes/<int:pk>/editar/", views.VisitanteUpdateView.as_view(), name="editar_visitante"),
 
+    path("mi-perfil/", views.MiPerfilView.as_view(), name="mi_perfil"),
+
     # TODO:
     # path("ferias/<int:pk>/", views.DetalleFeriaView.as_view(), name="detalle_feria"),
     # path("ferias/nueva/", views.NuevaFeriaView.as_view(), name="nueva_feria"),

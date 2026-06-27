@@ -29,15 +29,19 @@
         <li class="nav-item">
           <a href="{% url 'ferias:lista_emprendedores' %}" class="nav-link">Emprendedores</a>
         </li>
+        {% if user.is_authenticated %}
         <li class="nav-item">
           <a href="{% url 'ferias:lista_visitantes' %}" class="nav-link">Visitantes</a>
         </li>
+        {% endif %}
       </ul>
 
       <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
         {% if user.is_authenticated %}
         <span class="text-light mb-0">
-          Hola, <strong>{{ user.username }}</strong>
+          Hola, <a href="{% url 'ferias:mi_perfil' %}" class="text-light text-decoration-none fw-bold">
+            {{ user.username }}
+          </a>
         </span>
         <form method="POST" action="{% url 'logout' %}" class="m-0">
           {% csrf_token %}
@@ -45,6 +49,7 @@
         </form>
         {% else %}
         <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light fw-bold">Iniciar Sesión</a>
+        <a href="{% url 'registro' %}" class="btn btn-sm btn-outline-light fw-bold">Registrarse</a>
         {% endif %}
       </div>
 

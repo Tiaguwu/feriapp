@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi perfil {% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">👤 Mi Perfil</h4>
+            </div>
+            <div class="card-body bg-light">
+
+                <h5 class="text-secondary">Datos de la Cuenta</h5>
+                <p class="mb-1"><strong>Nombre de usuario:</strong> {{ user.username }} </p>
+
+                <hr class="my-4">
+
+                {% if user.perfil_emprendedor %}
+                    <h5 class="text-success mb-3">🏪 Perfil de Emprendedor</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Nombre completo:</strong> {{ user.perfil_emprendedor.nombre }} {{ user.perfil_emprendedor.apellido }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ user.perfil_emprendedor.email }}</li>
+                        <li class="list-group-item"><strong>Rubro principal:</strong> {{ user.perfil_emprendedor.rubro }}</li>
+                        <li class="list-group-item"><strong>Teléfono:</strong> {{ user.perfil_emprendedor.telefono }}</li>
+                    </ul>
+                    <a href="{% url 'ferias:editar_emprendedor' user.perfil_emprendedor.pk %}" class="btn btn-outline-success">✏️ Editar mis datos</a>
+
+                {% elif user.perfil_visitante %}
+                    <h5 class="text-primary mb-3">🎟️ Perfil de Visitante</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Nombre completo:</strong> {{ user.perfil_visitante.nombre }} {{ user.perfil_visitante.apellido }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ user.perfil_visitante.email }}</li>
+                    </ul>
+                    <a href="{% url 'ferias:editar_visitante' user.perfil_visitante.pk %}" class="btn btn-outline-primary">✏️ Editar mis datos</a>
+
+                {% else %}
+                    <div class="alert alert-warning">
+                        Todavía no completaste tu perfil en FeriApp.
+                    </div>
+                    <a href="{% url 'elegir_rol' %}" class="btn btn-success">Completar mi Perfil</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

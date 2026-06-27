@@ -8,7 +8,8 @@ from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-from django.views.generic.edit import CreateView
+from django.contrib import messages
+from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 from django.db.models import Count
 
 
@@ -107,41 +108,55 @@ class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView)
     model = Emprendedor
     form_class = EmprendedorForm
     template_name = 'emprendedores/formulario_emprendedor.html'
-
-    # Redirecciona a la lista de emprendedores cuando todo sale bien
     success_url = reverse_lazy('ferias:lista_emprendedores')
-    success_message = "Emprendedor creado exitosamente."
+    success_message = "Emprendedor creado exitosamente." 
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
-        # Invocamos el save personalizado enviando al usuario logueado
-        emprendedor = form.save(usuario=self.request.user)
 
-        # Si el modelo encontró errores en validate(), retornará None
-        if not emprendedor:
-            # Renderiza de nuevo el formulario mostrando los non_field_errors
+        nombre = form.cleaned_data['nombre']
+        apellido = form.cleaned_data['apellido']
+        email = form.cleaned_data['email']
+        rubro = form.cleaned_data['rubro']
+        telefono = form.cleaned_data['telefono']
+
+        emprendedor, errors = Emprendedor.new(nombre, apellido, email, rubro, telefono, self.request.user)
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
             return self.form_invalid(form)
     
         self.object = emprendedor
+
+        messages.success(self.request, self.success_message)
+
         return redirect(self.get_success_url())
     
-    # Método para atajar a los duplicados
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and hasattr(request.user, 'perfil_emprendedor'):
-            # Si ya es emprendedor, lo mandamos a editar su perfil en vez de crear uno nuevo
             return redirect('ferias:editar_emprendedor', pk=request.user.perfil_emprendedor.pk)
         return super().dispatch(request, *args, **kwargs)
 
-class EmprendedorUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class EmprendedorUpdateView(EmprendedorRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Emprendedor
     form_class = EmprendedorForm
     template_name = 'emprendedores/formulario_emprendedor.html'
     success_url = reverse_lazy('ferias:lista_emprendedores')
     success_message = "Tus datos se actualizaron correctamente."
 
-    def form_valid(self, form):
-        emprendedor = self.get_object()  # Obtenemos el emprendedor que se está editando
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
 
-        # Llamamos al método .update() del modelo pasándole los datos limpios del form
+    def form_valid(self, form):
+        emprendedor = self.get_object()
+
         errors = emprendedor.update(
             nombre=form.cleaned_data['nombre'],
             apellido=form.cleaned_data['apellido'],
@@ -151,12 +166,11 @@ class EmprendedorUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         )
 
         if errors:
-            # Si el método update del modelo encuentra errores, los agregamos al form
             for error in errors:
                 form.add_error(None, error)
             return self.form_invalid(form)
 
-        return redirect(self.get_success_url())
+        return super().form_valid(form)
 
     # --- VISITANTE ---
 
@@ -164,33 +178,52 @@ class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Visitante
     form_class = VisitanteForm
     template_name = 'visitantes/formulario_visitante.html'
-
     success_url = reverse_lazy('ferias:lista_visitantes')
-
     success_message = "Visitante creado exitosamente."
 
+    def get_form_kwargs(self):
+        # Agrega el usuario actual en los parametros de inicializacion del form
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
-        visitante = form.save(usuario=self.request.user)
+        nombre = form.cleaned_data['nombre']
+        apellido = form.cleaned_data['apellido']
+        email = form.cleaned_data['email']
 
-        if not visitante:
+        # Ejecuta el método de creación personalizado del modelo, que retorna el visitante creado o None si hubo errores
+        visitante, errors = Visitante.new(nombre, apellido, email, self.request.user)
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error) # Agrega el string directamente al formulario
             return self.form_invalid(form)
-        
-        self.object = visitante
-        return redirect(self.get_success_url())
 
+        self.object = visitante
+
+        messages.success(self.request, self.success_message)
+
+        return redirect(self.get_success_url())
+    
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and hasattr(request.user, 'perfil_visitante'):
 
             return redirect('ferias:editar_visitante', pk=request.user.perfil_visitante.pk)
         return super().dispatch(request, *args, **kwargs)
-
-class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    
+class VisitanteUpdateView(VisitanteRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Visitante
     form_class = VisitanteForm
     template_name = 'visitantes/formulario_visitante.html'
     success_url = reverse_lazy('ferias:lista_visitantes')
     success_message = "Tus datos se actualizaron correctamente."
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
         visitante = self.get_object()
 
@@ -205,30 +238,44 @@ class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
                 form.add_error(None, error)
             return self.form_invalid(form)
 
-        return redirect(self.get_success_url())
+        return super().form_valid(form)
 
     # --- USUARIO ---
-
-class RegistroView(CreateView):
+class RegistroView(SuccessMessageMixin, CreateView):
     template_name = 'registration/registro.html'
     form_class = UserCreationForm
     success_url = reverse_lazy('elegir_rol')
+    success_message = "Tu cuenta fue creada exitosamente. ¡Te damos la bienvenida!"
 
     # Interceptamos el momento exacto en que el formulario es válido para loguearlo
     def form_valid(self, form):
 
         # Guarda al usuario en la base de datos
         # Al hacer form.save(), Django crea el User y lo asigna a self.object
-        user = form.save()
+        response = super().form_valid(form)
 
         # Logueamos al usuario manualmente en la sesión actual
-        login(self.request, user)
+        login(self.request, self.object)
 
         # Redirigimos al success_url de forma segura
-        return redirect(self.get_success_url())
+        return response
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('ferias:home')
+        return super().dispatch(request, *args, **kwargs)
 
-class ElegirRolView(TemplateView):
+class ElegirRolView(LoginRequiredMixin, TemplateView):
     template_name = 'registration/elegir_rol.html'
+
+    # Si intentan elegir rol sin estar logueados, los mandamos al login
+    login_url = reverse_lazy('login')
+
+class MiPerfilView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/mi_perfil.html'
+
+    # Si intenta acceder a su perfil sin estar logueado, lo mandamos al login
+    login_url = reverse_lazy('login')
 
 class NuevaFeriaView(LoginRequiredMixin, CreateView):
     """
