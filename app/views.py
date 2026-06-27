@@ -1,7 +1,6 @@
 """Vistas públicas de la aplicación de ferias."""
 
-from pyexpat.errors import messages
-
+from django.contrib import messages
 from django.views.generic import ListView, TemplateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -242,7 +241,7 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Inscripcion
     form_class = InscripcionForm
     template_name = 'inscripciones/nueva_inscripcion.html'
-    success_url = reverse_lazy('ferias:lista_ferias')
+    success_url = reverse_lazy('ferias:inscripciones')
     success_message = "Inscripción realizada exitosamente."
 
     def get_form_kwargs(self):
@@ -287,10 +286,10 @@ class MisInscripcionesView(LoginRequiredMixin, ListView):
 class CancelarInscripcionView(LoginRequiredMixin, View):
     
     def post(self, request, pk):
-        inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor)
-        errores = inscripcion.update(estado='cancelada')
+        inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor) # evita que un emprendedor cancele inscripciones ajenas
+        errores = inscripcion.update(nuevo_estado='cancelada')
         if errores:
             messages.error(request, "No se pudo cancelar la inscripción: " + ", ".join(errores))
         else:
             messages.success(request, "Inscripción cancelada exitosamente.")
-        return redirect('ferias:mis_inscripciones')
+        return redirect('ferias:inscripciones')

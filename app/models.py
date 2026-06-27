@@ -370,6 +370,14 @@ class Inscripcion(models.Model):
         if feria and date.today() > feria.fecha_fin:
             errors.append("La feria ya terminó.")
 
+        if emprendedor and feria:
+            ya_inscripto = Inscripcion.objects.filter(
+                emprendedor=emprendedor,
+                feria=feria
+            ).exclude(estado='cancelada').exists()
+            if ya_inscripto:
+                errors.append("Ya estás inscripto en esta feria.")
+
         return errors
 
     @classmethod
