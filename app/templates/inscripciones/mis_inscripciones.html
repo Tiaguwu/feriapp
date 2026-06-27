@@ -38,7 +38,11 @@
                         {% if inscripcion.estado != "cancelada" %}
                             <form method="post" action="{% url 'ferias:cancelar_inscripcion' inscripcion.pk %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                                <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('¿Estás seguro de que quieres cancelar esta inscripción?');">
+                                    Cancelar
+                                </button>
                             </form>
                         {% else %}
                             <span class="text-muted">-</span>

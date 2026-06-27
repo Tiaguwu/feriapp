@@ -241,7 +241,7 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Inscripcion
     form_class = InscripcionForm
     template_name = 'inscripciones/nueva_inscripcion.html'
-    success_url = reverse_lazy('ferias:inscripciones')
+    success_url = reverse_lazy('ferias:mis_inscripciones')
     success_message = "Inscripción realizada exitosamente."
 
     def get_form_kwargs(self):
@@ -283,13 +283,23 @@ class MisInscripcionesView(LoginRequiredMixin, ListView):
             emprendedor=self.request.user.perfil_emprendedor
         )
 
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'perfil_emprendedor'):
+            messages.error(request, "Debes ser un emprendedor para ver tus inscripciones.")
+            return redirect('ferias:lista_ferias')
+        return super().dispatch(request, *args, **kwargs)
+
 class CancelarInscripcionView(LoginRequiredMixin, View):
     
     def post(self, request, pk):
-        inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor) # evita que un emprendedor cancele inscripciones ajenas
+        if request.user.is_staff or request.user.is_superuser: # Staff y superuser pueden cancelar cualquier inscripción
+            inscripcion = get_object_or_404(Inscripcion, pk=pk)
+        else:
+            inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor)
+        
         errores = inscripcion.update(nuevo_estado='cancelada')
         if errores:
             messages.error(request, "No se pudo cancelar la inscripción: " + ", ".join(errores))
         else:
             messages.success(request, "Inscripción cancelada exitosamente.")
-        return redirect('ferias:inscripciones')
+        return redirect('ferias:mis_inscripciones')
