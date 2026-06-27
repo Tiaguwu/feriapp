@@ -1,11 +1,13 @@
 """Vistas públicas de la aplicación de ferias."""
 
-from django.views.generic import ListView, TemplateView, DetailView
+from pyexpat.errors import messages
+
+from django.views.generic import ListView, TemplateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.views.generic.edit import CreateView
@@ -18,61 +20,26 @@ from .forms import EmprendedorForm, InscripcionForm, VisitanteForm, FeriaForm
 class HomeView(TemplateView):
     """Vista de inicio. Por ahora vacía — completar con estadísticas."""
 
-    template_name = "ferias/home.html"
-
-class ListaFeriasView(ListView):
-    """Lista todas las ferias activas."""
-
-    model = Feria
-    template_name = "ferias/lista_ferias.html"
-    context_object_name = "ferias"
-
-    def get_queryset(self):
-        """Retorna ferias activas, opcionalmente filtradas por categoría."""
-        queryset = Feria.objects.filter(activa=True)
-        
-        categoria_id = self.request.GET.get('categoria')
-        
-        if categoria_id:
-            queryset = queryset.filter(categorias__id=categoria_id)
-        
-        return queryset
-    
-    def get_context_data(self, **kwargs):
-        """Agrega la lista de categorías al contexto para mostrar en el template."""
-        context = super().get_context_data(**kwargs)
-        context['categorias'] = Categoria.objects.filter(activa=True)
-        
-        # Para mantener seleccionada la categoría actual en el selector
-        categoria_id = self.request.GET.get('categoria')
-        if categoria_id:
-            context['categoria_seleccionada'] = int(categoria_id)
-        
-        return context
+    template_name = 'ferias/home.html'
 
     # --- EMPRENDEDOR ---
 
 class ListaEmprendedorView(ListView):
     
     model = Emprendedor
-    template_name = "emprendedores/lista_emprendedores.html"
-    context_object_name = "emprendedores"
+    template_name = 'emprendedores/lista_emprendedores.html'
+    context_object_name = 'emprendedores'
+
+class DetalleEmprendedorView(DetailView):
+    model = Emprendedor
+    template_name = 'emprendedores/detalle_emprendedor.html'
+    context_object_name = 'emprendedor'
 
 class ListaVisitanteView(ListView):
 
     model = Visitante
-    template_name = "visitantes/lista_visitantes.html"
-    context_object_name = "visitantes"
-
-class DetalleFeriaView(DetailView):
-    model = Feria
-    template_name = "ferias/detalle_feria.html"
-    context_object_name = "feria"
-
-class DetalleEmprendedorView(DetailView):
-    model = Emprendedor
-    template_name = "emprendedores/detalle_emprendedor.html"
-    context_object_name = "emprendedor"
+    template_name = 'visitantes/lista_visitantes.html'
+    context_object_name = 'visitantes'
 
 class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Emprendedor
@@ -207,7 +174,7 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
     Requiere usuario autenticado.
     """
     form_class = FeriaForm
-    template_name = "ferias/nueva_feria.html"
+    template_name = 'ferias/nueva_feria.html'
     success_url = reverse_lazy('ferias:lista_ferias')
     
     def form_valid(self, form):
@@ -236,10 +203,45 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
         
         return super().form_valid(form)
 
+class DetalleFeriaView(DetailView):
+    model = Feria
+    template_name = 'ferias/detalle_feria.html'
+    context_object_name = 'feria'
+
+class ListaFeriasView(ListView):
+    """Lista todas las ferias activas."""
+
+    model = Feria
+    template_name = 'ferias/lista_ferias.html'
+    context_object_name = 'ferias'
+
+    def get_queryset(self):
+        """Retorna ferias activas, opcionalmente filtradas por categoría."""
+        queryset = Feria.objects.filter(activa=True)
+        
+        categoria_id = self.request.GET.get('categoria')
+        
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega la lista de categorías al contexto para mostrar en el template."""
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.filter(activa=True)
+        
+        # Para mantener seleccionada la categoría actual en el selector
+        categoria_id = self.request.GET.get('categoria')
+        if categoria_id:
+            context['categoria_seleccionada'] = int(categoria_id)
+        
+        return context
+
 class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Inscripcion
     form_class = InscripcionForm
-    template_name = "inscripciones/nueva_inscripcion.html"
+    template_name = 'inscripciones/nueva_inscripcion.html'
     success_url = reverse_lazy('ferias:lista_ferias')
     success_message = "Inscripción realizada exitosamente."
 
@@ -270,7 +272,25 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         
         self.object = inscripcion
         return redirect(self.get_success_url())
+    
 
-# TODO: implementar las siguientes vistas:
-# class NuevaInscripcionView(CreateView): ...
-# class CancelarInscripcionView(View): ...
+class MisInscripcionesView(LoginRequiredMixin, ListView):
+    model = Inscripcion
+    template_name = 'inscripciones/mis_inscripciones.html'
+    context_object_name = 'inscripciones'
+
+    def get_queryset(self):
+        return Inscripcion.objects.filter(
+            emprendedor=self.request.user.perfil_emprendedor
+        )
+
+class CancelarInscripcionView(LoginRequiredMixin, View):
+    
+    def post(self, request, pk):
+        inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor)
+        errores = inscripcion.update(estado='cancelada')
+        if errores:
+            messages.error(request, "No se pudo cancelar la inscripción: " + ", ".join(errores))
+        else:
+            messages.success(request, "Inscripción cancelada exitosamente.")
+        return redirect('ferias:mis_inscripciones')

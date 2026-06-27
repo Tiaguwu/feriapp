@@ -196,7 +196,7 @@ class InscripcionForm(forms.ModelForm):
             self.fields['emprendedor'].queryset = Emprendedor.objects.all()
         else:
             self.fields.pop('emprendedor')  # Eliminar el campo si no es staff o superuser
-    
+
     #  CONSULTA: es necesario el metodo clean() o la validación completa la hace la vista cuando llama a Inscripcion.new() ???
 
     def clean(self):
