@@ -55,7 +55,7 @@
       <tr>
         <td class="fw-semibold">{{ feria.nombre }}</td>
         <td>
-          <a href="{% url 'app:detalle_feria' feria.id %}" class="btn btn-sm btn-primary">Ver detalles</a>
+          <a href="{% url 'ferias:detalle_feria' feria.id %}" class="btn btn-sm btn-primary">Ver detalles</a>
         </td>
         <td>{{ feria.ubicacion }}</td>
         <td>
@@ -82,9 +82,9 @@
         <!-- Acciones (mejorado: íconos) -->
         <td>
           <div class="btn-group btn-group-sm" role="group">
-            <a href="{% url 'app:detalle_feria' feria.id %}" 
-               class="btn btn-outline-primary" 
-               title="Ver detalles">
+            <a href="{% url 'ferias:detalle_feria' feria.id %}" 
+              class="btn btn-outline-primary" 
+              title="Ver detalles">
               👁️
             </a>
             <!-- TODO: Editar feria (cuando se implemente) -->
