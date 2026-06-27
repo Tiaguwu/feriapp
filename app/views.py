@@ -210,6 +210,11 @@ class RegistroView(SuccessMessageMixin,CreateView):
 
         # Redirigimos al success_url de forma segura
         return response
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('ferias:home')
+        return super().dispatch(request, *args, **kwargs)
 
 class ElegirRolView(LoginRequiredMixin, TemplateView):
     template_name = 'registration/elegir_rol.html'
