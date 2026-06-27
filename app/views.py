@@ -11,15 +11,14 @@ from django.contrib.auth import login
 from django.contrib import messages
 from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 
-from .models import Feria, Emprendedor, Visitante
-from .forms import EmprendedorForm, VisitanteForm
+from .models import Categoria, Feria, Emprendedor, Visitante
+from .forms import EmprendedorForm, VisitanteForm, FeriaForm
 
 
 class HomeView(TemplateView):
     """Vista de inicio. Por ahora vacía — completar con estadísticas."""
 
     template_name = "ferias/home.html"
-
 
 class ListaFeriasView(ListView):
     """Lista todas las ferias activas."""
@@ -29,8 +28,27 @@ class ListaFeriasView(ListView):
     context_object_name = "ferias"
 
     def get_queryset(self):
-        """Retorna solo las ferias marcadas como activas."""
-        return Feria.objects.filter(activa=True)
+        """Retorna ferias activas, opcionalmente filtradas por categoría."""
+        queryset = Feria.objects.filter(activa=True)
+        
+        categoria_id = self.request.GET.get('categoria')
+        
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega la lista de categorías al contexto para mostrar en el template."""
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.filter(activa=True)
+        
+        # Para mantener seleccionada la categoría actual en el selector
+        categoria_id = self.request.GET.get('categoria')
+        if categoria_id:
+            context['categoria_seleccionada'] = int(categoria_id)
+        
+        return context
 
     # --- EMPRENDEDOR ---
 
@@ -39,6 +57,17 @@ class ListaEmprendedorView(ListView):
     model = Emprendedor
     template_name = "emprendedores/lista_emprendedores.html"
     context_object_name = "emprendedores"
+
+class ListaVisitanteView(ListView):
+
+    model = Visitante
+    template_name = "visitantes/lista_visitantes.html"
+    context_object_name = "visitantes"
+
+class DetalleFeriaView(DetailView):
+    model = Feria
+    template_name = "ferias/detalle_feria.html"
+    context_object_name = "feria"
 
 class DetalleEmprendedorView(DetailView):
     model = Emprendedor
@@ -114,16 +143,6 @@ class EmprendedorUpdateView(EmprendedorRequiredMixin, SuccessMessageMixin, Updat
         return super().form_valid(form)
 
     # --- VISITANTE ---
-class ListaVisitanteView(ListView):
-
-    model = Visitante
-    template_name = "visitantes/lista_visitantes.html"
-    context_object_name = "visitantes"
-
-class DetalleFeriaView(DetailView):
-    model = Feria
-    template_name = "ferias/detalle_feria.html"
-    context_object_name = "feria"
 
 class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Visitante
@@ -227,8 +246,42 @@ class MiPerfilView(LoginRequiredMixin, TemplateView):
 
     # Si intenta acceder a su perfil sin estar logueado, lo mandamos al login
     login_url = reverse_lazy('login')
+
+class NuevaFeriaView(LoginRequiredMixin, CreateView):
+    """
+    Vista para crear una nueva feria.
+    Requiere usuario autenticado.
+    """
+    form_class = FeriaForm
+    template_name = "ferias/nueva_feria.html"
+    success_url = reverse_lazy('app:lista_ferias')
+    
+    def form_valid(self, form):
+        """
+        Guarda la feria usando el método new() del modelo.
+        El formulario ya validó los datos con Feria.validate()
+        """
+        cleaned_data = form.cleaned_data
+        
+        # Las categorías vienen como QuerySet del formulario
+        categorias = cleaned_data.get('categorias')
+        
+        feria, errors = Feria.new(
+            nombre=cleaned_data['nombre'],
+            categorias=categorias,
+            fecha_inicio=cleaned_data['fecha_inicio'],
+            fecha_fin=cleaned_data['fecha_fin'],
+            ubicacion=cleaned_data['ubicacion'],
+            capacidad_puestos=cleaned_data['capacidad_puestos']
+        )
+        
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+        
+        return super().form_valid(form)
+
 # TODO: implementar las siguientes vistas:
-# class DetalleFeriaView(DetailView): ...
-# class NuevaFeriaView(CreateView): ...
 # class NuevaInscripcionView(CreateView): ...
 # class CancelarInscripcionView(View): ...

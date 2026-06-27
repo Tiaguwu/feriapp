@@ -10,6 +10,7 @@ urlpatterns = [
 
     path("ferias/", views.ListaFeriasView.as_view(), name="lista_ferias"),
     path("ferias/<int:pk>/", views.DetalleFeriaView.as_view(), name="detalle_feria"),
+    path("ferias/nueva/", views.NuevaFeriaView.as_view(), name="nueva_feria"),
 
     path("emprendedores/", views.ListaEmprendedorView.as_view(), name="lista_emprendedores"),
     path("emprendedores/<int:pk>/", views.DetalleEmprendedorView.as_view(), name="detalle_emprendedor"),
