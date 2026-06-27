@@ -20,7 +20,6 @@ class HomeView(TemplateView):
 
     template_name = "ferias/home.html"
 
-
 class ListaFeriasView(ListView):
     """Lista todas las ferias activas."""
 
@@ -58,6 +57,17 @@ class ListaEmprendedorView(ListView):
     model = Emprendedor
     template_name = "emprendedores/lista_emprendedores.html"
     context_object_name = "emprendedores"
+
+class ListaVisitanteView(ListView):
+
+    model = Visitante
+    template_name = "visitantes/lista_visitantes.html"
+    context_object_name = "visitantes"
+
+class DetalleFeriaView(DetailView):
+    model = Feria
+    template_name = "ferias/detalle_feria.html"
+    context_object_name = "feria"
 
 class DetalleEmprendedorView(DetailView):
     model = Emprendedor
@@ -120,16 +130,6 @@ class EmprendedorUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         return redirect(self.get_success_url())
 
     # --- VISITANTE ---
-class ListaVisitanteView(ListView):
-
-    model = Visitante
-    template_name = "visitantes/lista_visitantes.html"
-    context_object_name = "visitantes"
-
-class DetalleFeriaView(DetailView):
-    model = Feria
-    template_name = "ferias/detalle_feria.html"
-    context_object_name = "feria"
 
 class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Visitante
@@ -154,7 +154,7 @@ class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
             return redirect('ferias:editar_visitante', pk=request.user.perfil_visitante.pk)
         return super().dispatch(request, *args, **kwargs)
-    
+
 class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Visitante
     form_class = VisitanteForm
@@ -179,6 +179,7 @@ class VisitanteUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return redirect(self.get_success_url())
 
     # --- USUARIO ---
+
 class RegistroView(CreateView):
     template_name = 'registration/registro.html'
     form_class = UserCreationForm
@@ -199,7 +200,6 @@ class RegistroView(CreateView):
 
 class ElegirRolView(TemplateView):
     template_name = 'registration/elegir_rol.html'
-
 
 class NuevaFeriaView(LoginRequiredMixin, CreateView):
     """
@@ -235,9 +235,7 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
         
         return super().form_valid(form)
-    
+
 # TODO: implementar las siguientes vistas:
-# class DetalleFeriaView(DetailView): ...
-# class NuevaFeriaView(CreateView): ...
 # class NuevaInscripcionView(CreateView): ...
 # class CancelarInscripcionView(View): ...
