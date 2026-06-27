@@ -34,6 +34,23 @@ class EmprendedorForm(forms.ModelForm):
             'telefono': forms.TextInput(attrs= {'class': 'form-control', 'placeholder': 'Ingrese su numero de telefono'}),
         }
     
+    def __init__(self, *args, **kwargs):
+        # Capturamos el usuario enviado desde la vista
+        self.usuario = kwargs.pop('usuario', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre and any(char.isdigit() for char in nombre):
+            raise forms.ValidationError("El nombre no puede contener números.")
+        return nombre
+
+    def clean_apellido(self):
+        apellido = self.cleaned_data.get('apellido')
+        if apellido and any(char.isdigit() for char in apellido):
+            raise forms.ValidationError("El apellido no puede contener números.")
+        return apellido
+
     def clean_telefono(self):
 
         telefono = self.cleaned_data.get('telefono')
@@ -44,35 +61,44 @@ class EmprendedorForm(forms.ModelForm):
             raise forms.ValidationError("El telefono solo puede contener numeros, sin espacios ni guiones.")
         
         return telefono
-    
-    def save(self, usuario, commit=True):
-        # Interceptamos el save para usar la lógica atómica del modelo
-        if commit:
-            # Invocamos el método de creación del modelo pasándole el usuario logueado
-            emprendedor, errors = Emprendedor.new(
-                nombre=self.cleaned_data['nombre'],
-                apellido=self.cleaned_data['apellido'],
-                email=self.cleaned_data['email'],
-                telefono=self.cleaned_data['telefono'],
-                rubro=self.cleaned_data['rubro'],
-                usuario=usuario
-            )
-            if errors:
-                for error in errors:
-                    self.add_error(None, error)  # Agrega errores no asociados a un campo específico
-                return None
-            return emprendedor
-        return super().save(commit=commit)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        nombre = cleaned_data.get('nombre')
+        apellido = cleaned_data.get('apellido')
+        email = cleaned_data.get('email')
+        rubro = cleaned_data.get('rubro')
+        telefono = cleaned_data.get('telefono')
+
+        if not all([nombre, apellido, email, rubro, telefono]):
+            return cleaned_data
+
+        usuario_para_validar = self.instance.usuario if self.instance.pk else self.usuario
+
+        errors = Emprendedor.validate(nombre, apellido, email, rubro, telefono, usuario_para_validar)
+
+        if self.instance.pk and self.instance.email == email:
+            errors = [e for e in errors if "Ya exise un emprendedor registrado con este email." not in e]
+
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_data
 
 class VisitanteForm(forms.ModelForm):
     class Meta:
         model = Visitante
         fields = ['nombre', 'apellido', 'email']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ingrese su nombre'}),
-            'apellido': forms.TextInput(attrs= {'class': 'form-control', 'placeholder': 'Ingrese su apellido'}),
-            'email': forms.EmailInput(attrs= {'class': 'form-control', 'placeholder': 'Ingrese su correo electronico'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
+            'apellido': forms.TextInput(attrs= {'class': 'form-control', 'placeholder': 'Apellido'}),
+            'email': forms.EmailInput(attrs= {'class': 'form-control', 'placeholder': 'ejemplo@correo.com'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        # Permitimos pasar el usuario logueado al formulario para usarlo en la validación y creación
+        self.usuario = kwargs.pop('usuario', None)
+        super().__init__(*args, **kwargs)
 
     # Validación para que el nombre y apellido no contengan números.
     def clean_nombre(self):
@@ -89,20 +115,29 @@ class VisitanteForm(forms.ModelForm):
                 raise forms.ValidationError("El apellido no puede contener números.")
         return apellido
 
-    def save(self, usuario, commit=True):
-        if commit:
-            visitante, errors = Visitante.new(
-                nombre=self.cleaned_data['nombre'],
-                apellido=self.cleaned_data['apellido'],
-                email=self.cleaned_data['email'],
-                usuario=usuario
-            )
-            if errors:
-                for error in errors:
-                    self.add_error(None, error)
-                return None
-            return visitante
-        return super().save(commit=commit)
+    def clean(self):
+        cleaned_data = super().clean()
+        nombre = cleaned_data.get('nombre')
+        apellido = cleaned_data.get('apellido')
+        email = cleaned_data.get('email')
+
+        # Si algun clean anterior fallo, detenemos la validacion cruzada 
+        if not nombre or not apellido or not email:
+            return cleaned_data
+
+        # Identificamos qué usuario validar segun el contexto (Edicion vs Creacion)
+        usuario_para_validar = self.instance.usuario if self.instance.pk else self.usuario
+
+        # Validar como una capa de integridad
+        errors = Visitante.validate(nombre, apellido, email, usuario_para_validar)
+
+        if self.instance.pk and self.instance.email == email:
+            errors = [e for e in errors if "Ya existe un visitante registrado con este email." not in e]
+
+        if errors:
+            raise ValidationError(errors)
+        
+        return cleaned_data
 
 class FeriaForm(forms.ModelForm):
     """Formulario para crear/editar una feria."""
