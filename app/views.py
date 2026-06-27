@@ -9,7 +9,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib import messages
-from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixinfrom 
+from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 from django.db.models import Count
 
 
