@@ -20,14 +20,14 @@
         
                     <div class="progress">
                         <div class="progress-bar 
-                         {% if feria.puestos_ocupados == feria.capacidad_puestos %}bg-danger
-                         {% elif feria.puestos_ocupados > feria.capacidad_puestos|divisibleby:2 %}bg-warning
-                         {% else %}bg-success{% endif %}"
-                         role="progressbar" 
-                         style="width: {% widthratio feria.puestos_ocupados feria.capacidad_puestos 100 %}%" 
-                         aria-valuenow="{{ feria.puestos_ocupados }}" 
-                         aria-valuemin="0" 
-                         aria-valuemax="{{ feria.capacidad_puestos }}">
+                            {% if feria.puestos_ocupados == feria.capacidad_puestos %}bg-danger
+                            {% elif feria.puestos_ocupados > feria.capacidad_puestos|divisibleby:2 %}bg-warning
+                            {% else %}bg-success{% endif %}"
+                            role="progressbar" 
+                            style="width: {% widthratio feria.puestos_ocupados feria.capacidad_puestos 100 %}%" 
+                            aria-valuenow="{{ feria.puestos_ocupados }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="{{ feria.capacidad_puestos }}">
                         {% widthratio feria.puestos_ocupados feria.capacidad_puestos 100 %}%
                         </div>
                     </div>
