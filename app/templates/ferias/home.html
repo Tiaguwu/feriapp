@@ -3,15 +3,114 @@
 {% block title %}Inicio — FeriApp{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-  <div class="col">
-    <h1 class="h3">Panel de inicio</h1>
-    <p class="text-muted">Bienvenido al sistema de gestión de ferias y emprendedores.</p>
-  </div>
-</div>
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Panel de inicio</h1>
+            <p class="text-muted">Bienvenido al sistema de gestión de ferias y emprendedores.</p>
+        </div>
+    </div>
 
-<!-- TODO: reemplazar con estadísticas reales del contexto -->
-<div class="row g-3">
+    <!-- Tarjetas de estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <h1 class="display-4">{{ total_ferias_activas }}</h1>
+                    <p class="card-text">Ferias activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <h1 class="display-4">{{ total_categorias }}</h1>
+                    <p class="card-text">Categorías</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <h1 class="display-4">{{ total_emprendedores }}</h1>
+                    <p class="card-text">Emprendedores</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-warning text-white">
+                <div class="card-body">
+                    <h1 class="display-4">{{ total_inscripciones }}</h1>
+                    <p class="card-text">Inscripciones confirmadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="row g-3">
+        <!-- Ferias próximas -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Ferias próximas (7 días)</h4>
+                </div>
+                <div class="card-body">
+                    {% if ferias_proximas %}
+                        <ul class="list-group list-group-flush">
+                            {% for feria in ferias_proximas %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ feria.nombre }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ feria.fecha_inicio|date:"d/m/Y" }} - {{ feria.ubicacion }}
+                                        </small>
+                                    </div>
+                                    <a href="{% url 'app:detalle_feria' feria.id %}" class="btn btn-sm btn-outline-primary">
+                                        Ver
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No hay ferias próximas en los próximos 7 días.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorías destacadas -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Categorías con más ferias</h4>
+                </div>
+                <div class="card-body">
+                    {% if categorias_destacadas %}
+                        <ul class="list-group list-group-flush">
+                            {% for categoria in categorias_destacadas %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ categoria.nombre }}
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ categoria.total_ferias }} feria{{ categoria.total_ferias|pluralize }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No hay categorías con ferias asignadas.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'app:lista_ferias' %}" class="btn btn-primary">
+                Ver todas las ferias
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
