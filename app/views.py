@@ -9,16 +9,46 @@ from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib import messages
-from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
+from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixinfrom 
+from django.db.models import Count
 
-from .models import Categoria, Feria, Emprendedor, Visitante
+
+from datetime import date, timedelta
+from .models import Categoria, Feria, Emprendedor, Visitante, Inscripcion
 from .forms import EmprendedorForm, VisitanteForm, FeriaForm
 
 
+
 class HomeView(TemplateView):
-    """Vista de inicio. Por ahora vacía — completar con estadísticas."""
+    """Vista de inicio con estadísticas generales."""
 
     template_name = "ferias/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estadísticas básicas
+        context['total_ferias_activas'] = Feria.objects.filter(activa=True).count()
+        context['total_categorias'] = Categoria.objects.filter(activa=True).count()
+        context['total_emprendedores'] = Emprendedor.objects.count()
+        context['total_inscripciones'] = Inscripcion.objects.filter(estado="confirmada").count()
+        
+        # Ferias próximas (próximos 7 días)
+        hoy = date.today()
+        fecha_limite = hoy + timedelta(days=7)
+        context['ferias_proximas'] = Feria.objects.filter(
+            activa=True,
+            fecha_inicio__gte=hoy,
+            fecha_inicio__lte=fecha_limite
+        ).order_by('fecha_inicio')[:5]
+        
+        # Categorías con más ferias
+        context['categorias_destacadas'] = Categoria.objects.annotate(
+            total_ferias=Count('ferias')
+        ).filter(total_ferias__gt=0).order_by('-total_ferias')[:5]
+        
+        return context
+
 
 class ListaFeriasView(ListView):
     """Lista todas las ferias activas."""
