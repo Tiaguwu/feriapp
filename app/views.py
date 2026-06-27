@@ -1,54 +1,25 @@
 """Vistas públicas de la aplicación de ferias."""
 
-from django.views.generic import ListView, TemplateView, DetailView
+from django.contrib import messages
+from django.views.generic import ListView, TemplateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib import messages
 from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
-from django.db.models import Count
 
 
-from datetime import date, timedelta
-from .models import Categoria, Feria, Emprendedor, Visitante, Inscripcion
+from .models import Categoria, Feria, Emprendedor, Visitante
 from .forms import EmprendedorForm, VisitanteForm, FeriaForm
-
-
 
 class HomeView(TemplateView):
     """Vista de inicio con estadísticas generales."""
 
     template_name = "ferias/home.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Estadísticas básicas
-        context['total_ferias_activas'] = Feria.objects.filter(activa=True).count()
-        context['total_categorias'] = Categoria.objects.filter(activa=True).count()
-        context['total_emprendedores'] = Emprendedor.objects.count()
-        context['total_inscripciones'] = Inscripcion.objects.filter(estado="confirmada").count()
-        
-        # Ferias próximas (próximos 7 días)
-        hoy = date.today()
-        fecha_limite = hoy + timedelta(days=7)
-        context['ferias_proximas'] = Feria.objects.filter(
-            activa=True,
-            fecha_inicio__gte=hoy,
-            fecha_inicio__lte=fecha_limite
-        ).order_by('fecha_inicio')[:5]
-        
-        # Categorías con más ferias
-        context['categorias_destacadas'] = Categoria.objects.annotate(
-            total_ferias=Count('ferias')
-        ).filter(total_ferias__gt=0).order_by('-total_ferias')[:5]
-        
-        return context
-
 
 class ListaFeriasView(ListView):
     """Lista todas las ferias activas."""
@@ -85,24 +56,19 @@ class ListaFeriasView(ListView):
 class ListaEmprendedorView(ListView):
     
     model = Emprendedor
-    template_name = "emprendedores/lista_emprendedores.html"
-    context_object_name = "emprendedores"
+    template_name = 'emprendedores/lista_emprendedores.html'
+    context_object_name = 'emprendedores'
+
+class DetalleEmprendedorView(DetailView):
+    model = Emprendedor
+    template_name = 'emprendedores/detalle_emprendedor.html'
+    context_object_name = 'emprendedor'
 
 class ListaVisitanteView(ListView):
 
     model = Visitante
-    template_name = "visitantes/lista_visitantes.html"
-    context_object_name = "visitantes"
-
-class DetalleFeriaView(DetailView):
-    model = Feria
-    template_name = "ferias/detalle_feria.html"
-    context_object_name = "feria"
-
-class DetalleEmprendedorView(DetailView):
-    model = Emprendedor
-    template_name = "emprendedores/detalle_emprendedor.html"
-    context_object_name = "emprendedor"
+    template_name = 'visitantes/lista_visitantes.html'
+    context_object_name = 'visitantes'
 
 class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Emprendedor
@@ -283,8 +249,8 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
     Requiere usuario autenticado.
     """
     form_class = FeriaForm
-    template_name = "ferias/nueva_feria.html"
-    success_url = reverse_lazy('app:lista_ferias')
+    template_name = 'ferias/nueva_feria.html'
+    success_url = reverse_lazy('ferias:lista_ferias')
     
     def form_valid(self, form):
         """
@@ -312,6 +278,104 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
         
         return super().form_valid(form)
 
-# TODO: implementar las siguientes vistas:
-# class NuevaInscripcionView(CreateView): ...
-# class CancelarInscripcionView(View): ...
+class DetalleFeriaView(DetailView):
+    model = Feria
+    template_name = 'ferias/detalle_feria.html'
+    context_object_name = 'feria'
+
+class ListaFeriasView(ListView):
+    """Lista todas las ferias activas."""
+
+    model = Feria
+    template_name = 'ferias/lista_ferias.html'
+    context_object_name = 'ferias'
+
+    def get_queryset(self):
+        """Retorna ferias activas, opcionalmente filtradas por categoría."""
+        queryset = Feria.objects.filter(activa=True)
+        
+        categoria_id = self.request.GET.get('categoria')
+        
+        if categoria_id:
+            queryset = queryset.filter(categorias__id=categoria_id)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        """Agrega la lista de categorías al contexto para mostrar en el template."""
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.filter(activa=True)
+        
+        # Para mantener seleccionada la categoría actual en el selector
+        categoria_id = self.request.GET.get('categoria')
+        if categoria_id:
+            context['categoria_seleccionada'] = int(categoria_id)
+        
+        return context
+
+class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Inscripcion
+    form_class = InscripcionForm
+    template_name = 'inscripciones/nueva_inscripcion.html'
+    success_url = reverse_lazy('ferias:mis_inscripciones')
+    success_message = "Inscripción realizada exitosamente."
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        feria = form.cleaned_data['feria']
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            # Si es staff o superuser, puede inscribir a cualquier emprendedor
+            emprendedor = form.cleaned_data['emprendedor']
+        else:
+            emprendedor = self.request.user.perfil_emprendedor
+        
+        inscripcion, errors = Inscripcion.new(
+            emprendedor=emprendedor,
+            feria=feria,
+            registrado_por=self.request.user
+        )
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+        
+        self.object = inscripcion
+        return redirect(self.get_success_url())
+    
+
+class MisInscripcionesView(LoginRequiredMixin, ListView):
+    model = Inscripcion
+    template_name = 'inscripciones/mis_inscripciones.html'
+    context_object_name = 'inscripciones'
+
+    def get_queryset(self):
+        return Inscripcion.objects.filter(
+            emprendedor=self.request.user.perfil_emprendedor
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'perfil_emprendedor'):
+            messages.error(request, "Debes ser un emprendedor para ver tus inscripciones.")
+            return redirect('ferias:lista_ferias')
+        return super().dispatch(request, *args, **kwargs)
+
+class CancelarInscripcionView(LoginRequiredMixin, View):
+    
+    def post(self, request, pk):
+        if request.user.is_staff or request.user.is_superuser: # Staff y superuser pueden cancelar cualquier inscripción
+            inscripcion = get_object_or_404(Inscripcion, pk=pk)
+        else:
+            inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor)
+        
+        errores = inscripcion.update(nuevo_estado='cancelada')
+        if errores:
+            messages.error(request, "No se pudo cancelar la inscripción: " + ", ".join(errores))
+        else:
+            messages.success(request, "Inscripción cancelada exitosamente.")
+        return redirect('ferias:mis_inscripciones')

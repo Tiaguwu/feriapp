@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2 class="h4">Ferias activas</h2>
-  <a href="{% url 'app:nueva_feria' %}" class="btn btn-primary btn-sm">
+  <a href="{% url 'ferias:nueva_feria' %}" class="btn btn-primary btn-sm">
     + Nueva feria
   </a>
 </div>
@@ -31,7 +31,7 @@
       </div>
       {% if categoria_seleccionada %}
         <div class="col-md-2">
-          <a href="{% url 'app:lista_ferias' %}" class="btn btn-secondary w-100">Limpiar filtro</a>
+          <a href="{% url 'ferias:lista_ferias' %}" class="btn btn-secondary w-100">Limpiar filtro</a>
         </div>
       {% endif %}
     </form>
@@ -55,8 +55,7 @@
       <tr>
         <td class="fw-semibold">{{ feria.nombre }}</td>
         <td>
-          <span class="d-block">{{ feria.fecha_inicio|date:"d/m/Y" }}</span>
-          <span class="d-block text-muted small">→ {{ feria.fecha_fin|date:"d/m/Y" }}</span>
+          <a href="{% url 'app:detalle_feria' feria.id %}" class="btn btn-sm btn-primary">Ver detalles</a>
         </td>
         <td>{{ feria.ubicacion }}</td>
         <td>

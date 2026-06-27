@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Inscripciones{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4">Mis Inscripciones</h2>
+    <a href="{% url 'ferias:nueva_inscripcion' %}" class="btn btn-primary btn-sm">Nueva inscripción</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Feria</th>
+                <th>Puesto</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inscripcion in inscripciones %}
+                <tr>
+                    <td class="fw-semibold">{{ inscripcion.feria.nombre }}</td>
+                    <td>{{ inscripcion.numero_puesto|default:"-" }}</td>
+                    <td>
+                        {% if inscripcion.estado == "confirmada" %}
+                            <span class="badge bg-success">Confirmada</span>
+                        {% elif inscripcion.estado == "lista_espera" %}
+                            <span class="badge bg-warning text-dark">En lista de espera</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Cancelada</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ inscripcion.fecha_inscripcion|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if inscripcion.estado != "cancelada" %}
+                            <form method="post" action="{% url 'ferias:cancelar_inscripcion' inscripcion.pk %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('¿Estás seguro de que quieres cancelar esta inscripción?');">
+                                    Cancelar
+                                </button>
+                            </form>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No tenés inscripciones registradas.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

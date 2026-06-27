@@ -1,7 +1,7 @@
 from pyexpat import errors
 
 from django import forms
-from .models import Emprendedor, Visitante, Feria, Categoria
+from .models import Emprendedor, Inscripcion, Visitante, Feria, Categoria
 from django.core.exceptions import ValidationError
 
 class EmprendedorForm(forms.ModelForm):
@@ -199,4 +199,53 @@ class FeriaForm(forms.ModelForm):
             for error in errors:
                 raise ValidationError(error)
     
+        return cleaned_data
+    
+class InscripcionForm(forms.ModelForm):
+    """Formulario para inscribirse a una feria."""
+    class Meta:
+        model = Inscripcion
+        fields = ['emprendedor', 'feria']
+        widgets = {
+            'emprendedor': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'feria': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+        }
+
+        labels = {
+            'emprendedor': 'Emprendedor',
+            'feria': 'Feria',
+        }
+
+    def __init__(self, *args, usuario=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Usar el usuario logueado para registrado_por
+        self.usuario = usuario
+        # Filtrar ferias para que solo se muestren las activas
+        self.fields['feria'].queryset = Feria.objects.filter(activa=True)
+
+        if usuario and (usuario.is_staff or usuario.is_superuser):
+            self.fields['emprendedor'].queryset = Emprendedor.objects.all()
+        else:
+            self.fields.pop('emprendedor')  # Eliminar el campo si no es staff o superuser
+
+    #  CONSULTA: es necesario el metodo clean() o la validación completa la hace la vista cuando llama a Inscripcion.new() ???
+
+    def clean(self):
+        cleaned_data = super().clean()
+        emprendedor = cleaned_data.get('emprendedor')
+        feria = cleaned_data.get('feria')
+
+        if emprendedor is None:
+            return cleaned_data # El usuario no es admin, no se valida el emprendedor en el front. Vale la pena validar lo demás?
+
+        errors = Inscripcion.validate(emprendedor, feria, self.usuario)
+
+        if errors:
+            for error in errors:
+                raise ValidationError(error)
+
         return cleaned_data

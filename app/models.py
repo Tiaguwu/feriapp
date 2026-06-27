@@ -320,9 +320,6 @@ class Emprendedor(models.Model):
         self.save()
         return []
 
-    # class Categoria(models.Model): ...  ← extraer categoria a FK
-    # class Emprendedor(models.Model): ...
-    # class Inscripcion(models.Model):
 class Inscripcion(models.Model):
     """Representa la inscripicón de un emprendedor a una feria."""
 
@@ -373,6 +370,14 @@ class Inscripcion(models.Model):
         if feria and date.today() > feria.fecha_fin:
             errors.append("La feria ya terminó.")
 
+        if emprendedor and feria:
+            ya_inscripto = Inscripcion.objects.filter(
+                emprendedor=emprendedor,
+                feria=feria
+            ).exclude(estado='cancelada').exists() # Permite reactivar una cancelada
+            if ya_inscripto:
+                errors.append("Ya estás inscripto en esta feria.")
+
         return errors
 
     @classmethod
@@ -381,8 +386,8 @@ class Inscripcion(models.Model):
         puestos_tomados = set(
             feria.inscripcion_set
                 .select_for_update()
-                .filter(estado="confirmada")
-                .values_list("numero_puesto", flat=True)
+                .filter(estado='confirmada')
+                .values_list('numero_puesto', flat=True)
         )
         for puesto in range(1, feria.capacidad_puestos + 1):
             if puesto not in puestos_tomados:
@@ -400,22 +405,35 @@ class Inscripcion(models.Model):
         errors = cls.validate(
             emprendedor, feria, registrado_por
         )
+
         if errors:
             return None, errors
 
         with transaction.atomic():
             hay_lugar = feria.tiene_lugar()
+
+            inscripcion_cancelada = cls.objects.filter(
+                emprendedor=emprendedor,
+                feria=feria,
+                estado='cancelada'
+            ).first()
+
+            # Si hay una cancelada, la reactivamos
+            if inscripcion_cancelada:
+                inscripcion_cancelada.estado = 'confirmada' if hay_lugar else 'lista_espera'
+                inscripcion_cancelada.numero_puesto = cls.puesto_libre(feria) if hay_lugar else None
+                inscripcion_cancelada.registrado_por = registrado_por
+                inscripcion_cancelada.save()
+                return inscripcion_cancelada, []
+
             inscripcion = cls.objects.create(
                 emprendedor=emprendedor,
                 numero_puesto=cls.puesto_libre(feria) if hay_lugar else None,
                 feria=feria,
                 registrado_por=registrado_por,
-                estado="confirmada" if hay_lugar else "lista_espera",
+                estado='confirmada' if hay_lugar else 'lista_espera',
             )
         return inscripcion, []
-
-    #El método update actualiza el estado de la inscripción. Esto evita que se creen inscripciones aleatorias y luego se les asigne un emprendedor y una feria.
-    #Para cambiar el emprendedor o la feria, se debería crear una nueva inscripción y eliminar la anterior, pudiendo perder el lugar en la fila.
 
     def update(
         self, nuevo_estado                  
@@ -430,28 +448,28 @@ class Inscripcion(models.Model):
             return [f"El estado: '{nuevo_estado}' no es válido."]
 
         with transaction.atomic():
-            if nuevo_estado == "confirmada" and self.estado != "confirmada":
+            if nuevo_estado == 'confirmada' and self.estado != 'confirmada':
                 # Solo confirmar si hay lugar
                 if self.feria.tiene_lugar():
-                    self.estado = "confirmada"
+                    self.estado = 'confirmada'
                     self.numero_puesto = Inscripcion.puesto_libre(self.feria)
                     self.save()
                 else:
                     return ["No hay puestos disponibles para confirmar esta inscripción."]
-            elif nuevo_estado == "cancelada" and self.estado == "confirmada":
+            elif nuevo_estado == 'cancelada' and self.estado == 'confirmada':
                 # Liberar el puesto si se cancela una inscripción confirmada
-                self.estado = "cancelada"
+                self.estado = 'cancelada'
                 self.save()
                 # Intentar confirmar la siguiente inscripción en lista de espera
                 siguiente = (
                     Inscripcion.objects
                     .select_for_update()
-                    .filter(feria=self.feria, estado="lista_espera")
-                    .order_by("fecha_inscripcion")
+                    .filter(feria=self.feria, estado='lista_espera')
+                    .order_by('fecha_inscripcion')
                     .first()
                 )
                 if siguiente:
-                    siguiente.estado = "confirmada"
+                    siguiente.estado = 'confirmada'
                     siguiente.numero_puesto = Inscripcion.puesto_libre(self.feria)
                     siguiente.save()
             else:
