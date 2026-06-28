@@ -168,7 +168,43 @@
         </div>
     </div>
 
-</div>
+    <!-- Feriantes destacados -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Feriantes destacados</h4>
+                </div>
+                <div class="card-body">
+                    {% if feriantes_destacados %}
+                        <div class="row g-3">
+                            {% for emp in feriantes_destacados %}
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title mb-1">{{ emp.apellido }}, {{ emp.nombre }}</h6>
+                                            <p class="text-muted small mb-2">{{ emp.rubro }}</p>
+                                            <span class="badge bg-warning text-dark fs-6">
+                                                {{ emp.promedio|floatformat:1 }} ★
+                                            </span>
+                                            <p class="text-muted small mt-1 mb-0">
+                                                {{ emp.total_resenias }} reseña{{ emp.total_resenias|pluralize }}
+                                            </p>
+                                        </div>
+                                        <div class="card-footer text-center p-2">
+                                            <a href="{% url 'ferias:detalle_emprendedor' emp.pk %}" class="btn btn-sm btn-outline-warning">Ver perfil</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Todavía no hay reseñas registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row mt-4">
         <div class="col-12 text-center">

@@ -5,9 +5,8 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
+        <h1>{{ feria.nombre }}</h1>
         <div class="col-md-8">
-            <h1>{{ feria.nombre }}</h1>
-            
             <p><strong>Ubicación:</strong> {{ feria.ubicacion }}</p>
             <p><strong>Fecha:</strong> {{ feria.fecha_inicio|date:"d/m/Y" }} al {{ feria.fecha_fin|date:"d/m/Y" }}</p>
             <p><strong>Capacidad:</strong> {{ feria.capacidad_puestos }} puestos</p>
@@ -17,7 +16,6 @@
                 <div class="col-md-8">
                     <h4>Ocupación</h4>
                     <p>Puestos ocupados: {{ feria.puestos_ocupados }} de {{ feria.capacidad_puestos }}</p>
-        
                     <div class="progress">
                         <div class="progress-bar 
                             {% if feria.puestos_ocupados == feria.capacidad_puestos %}bg-danger
@@ -33,7 +31,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <p><strong>Categorías:</strong></p>
             <ul>
                 {% for categoria in feria.categorias.all %}
@@ -43,8 +41,31 @@
                 {% endfor %}
             </ul>
         </div>
+
+        <div class="col-md-4">
+            <p><strong>Emprendedores Inscriptos</strong></p>
+            {% with confirmadas=feria.inscripcion_set.all %}
+                {% if confirmadas %}
+                    <ul class="list-group">
+                        {% for inscripcion in confirmadas|dictsort:"numero_puesto" %}
+                            {% if inscripcion.estado == 'confirmada' %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ inscripcion.emprendedor.apellido }}, {{ inscripcion.emprendedor.nombre }}</strong>
+                                        <small class="text-muted d-block">{{ inscripcion.emprendedor.rubro }}</small>
+                                    </div>
+                                    <span class="badge bg-success">Puesto {{ inscripcion.numero_puesto }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No hay emprendedores inscriptos todavía.</p>
+                {% endif %}
+            {% endwith %}
+        </div>
     </div>
-    
+
     <a href="{% url 'ferias:lista_ferias' %}" class="btn btn-secondary mt-3">Volver al listado</a>
 </div>
 {% endblock %}

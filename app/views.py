@@ -11,7 +11,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 from datetime import date, timedelta
-from django.db.models import Count
+from django.db.models import Avg, Count
 
 from .models import Categoria, Feria, Emprendedor, Resenia, Visitante, Inscripcion
 from .forms import EmprendedorForm, ReseniaForm, VisitanteForm, FeriaForm, InscripcionForm
@@ -55,6 +55,12 @@ class HomeView(LoginRequiredMixin, TemplateView):
                 'total': sum(conteos.values()),
             })
         context['resenias_por_feria'] = resenias_por_feria
+
+        # Feriantes destacados
+        context['feriantes_destacados'] = Emprendedor.objects.annotate(
+            promedio = Avg('resenia__calificacion'),
+            total_resenias = Count('resenia')
+        ).filter(promedio__isnull=False).order_by('-promedio')[:4]
 
         return context
 
