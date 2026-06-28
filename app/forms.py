@@ -1,3 +1,5 @@
+from datetime import date
+
 from django import forms
 from .models import Emprendedor, Inscripcion, Resenia, Visitante, Feria, Categoria
 from django.core.exceptions import ValidationError
@@ -222,8 +224,8 @@ class InscripcionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Usar el usuario logueado para registrado_por
         self.usuario = usuario
-        # Filtrar ferias para que solo se muestren las activas
-        self.fields['feria'].queryset = Feria.objects.filter(activa=True)
+        # Filtrar ferias para que solo se muestren las activas y que no hayan finalizado
+        self.fields['feria'].queryset = Feria.objects.filter(activa=True, fecha_fin__gte=date.today())
 
         if usuario and (usuario.is_staff or usuario.is_superuser):
             self.fields['emprendedor'].queryset = Emprendedor.objects.all()

@@ -526,6 +526,10 @@ class Resenia(models.Model):
                 feria=feria
             ).exists():
                 errors.append("Ya existe una reseña de este visitante para esta feria y emprendedor.")
+
+        # Verificamos que la feria este activa o ya haya pasado
+        if feria and date.today() < feria.fecha_inicio:
+            errors.append("La feria aún no ha comenzado.")
         return errors
 
     @classmethod
