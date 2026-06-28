@@ -33,7 +33,7 @@ class EmprendedorForm(forms.ModelForm):
             'email': forms.EmailInput(attrs= {'class': 'form-control', 'placeholder': 'Ingrese su correo electronico'}),
             'telefono': forms.TextInput(attrs= {'class': 'form-control', 'placeholder': 'Ingrese su numero de telefono'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         # Capturamos el usuario enviado desde la vista
         self.usuario = kwargs.pop('usuario', None)
@@ -78,7 +78,7 @@ class EmprendedorForm(forms.ModelForm):
         errors = Emprendedor.validate(nombre, apellido, email, rubro, telefono, usuario_para_validar)
 
         if self.instance.pk and self.instance.email == email:
-            errors = [e for e in errors if "Ya exise un emprendedor registrado con este email." not in e]
+            errors = [e for e in errors if "Ya existe un emprendedor registrado con ese email." not in e]
 
         if errors:
             raise ValidationError(errors)
@@ -132,7 +132,7 @@ class VisitanteForm(forms.ModelForm):
         errors = Visitante.validate(nombre, apellido, email, usuario_para_validar)
 
         if self.instance.pk and self.instance.email == email:
-            errors = [e for e in errors if "Ya existe un visitante registrado con este email." not in e]
+            errors = [e for e in errors if "Ya existe un visitante registrado con ese email." not in e]
 
         if errors:
             raise ValidationError(errors)

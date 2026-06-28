@@ -201,7 +201,7 @@ class Visitante(models.Model):
         return f"{self.apellido} {self.nombre}"
     
     @classmethod
-    def validate(cls, nombre, apellido, email, usuario):
+    def validate(cls, nombre, apellido, email, usuario, exclude_pk=None):
         errors = []
         if not nombre or not nombre.strip():
             errors.append("El nombre es obligatorio.")
@@ -210,7 +210,7 @@ class Visitante(models.Model):
 
         if not email or not email.strip():
             errors.append("El email es obligatorio.")
-        elif cls.objects.filter(email=email.strip()).exists():
+        elif cls.objects.filter(email=email.strip()).exclude(pk=exclude_pk).exists():
             errors.append("Ya existe un visitante registrado con ese email.")
         if not usuario:
             errors.append("El usuario asociado es obligatorio.")
@@ -236,7 +236,7 @@ class Visitante(models.Model):
             return None, [f"Error interno de base de datos al guardar: {str(e)}"]
 
     def update(self, nombre, apellido, email):
-        errors = self.__class__.validate(nombre, apellido, email, self.usuario)
+        errors = self.__class__.validate(nombre, apellido, email, self.usuario, exclude_pk=self.pk)
         if errors:
             return errors
         
@@ -264,7 +264,7 @@ class Emprendedor(models.Model):
         return f"{self.apellido} {self.nombre}"
     
     @classmethod
-    def validate(cls, nombre, apellido, email, rubro, telefono, usuario):
+    def validate(cls, nombre, apellido, email, rubro, telefono, usuario, exclude_pk=None):
         errors = []
         if not nombre or not nombre.strip():
             errors.append("El nombre es obligatorio.")
@@ -273,7 +273,7 @@ class Emprendedor(models.Model):
 
         if not email or not email.strip():
             errors.append("El email es obligatorio.")
-        elif cls.objects.filter(email=email.strip()).exists():
+        elif cls.objects.filter(email=email.strip()).exclude(pk=exclude_pk).exists():
             errors.append("Ya existe un emprendedor registrado con ese email.")
 
         if not rubro or not rubro.strip():
@@ -306,7 +306,7 @@ class Emprendedor(models.Model):
             return None, [f"Error interno de base de datos al guardar: {str(e)}"]
 
     def update(self, nombre, apellido, email, rubro, telefono):
-        errors = self.__class__.validate(nombre, apellido, email, rubro, telefono, self.usuario)
+        errors = self.__class__.validate(nombre, apellido, email, rubro, telefono, self.usuario, exclude_pk=self.pk)
         if errors:
             return errors
         
