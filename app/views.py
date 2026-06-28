@@ -9,12 +9,10 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-from django.contrib import messages
 from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 
-
-from .models import Categoria, Feria, Emprendedor, Visitante
-from .forms import EmprendedorForm, VisitanteForm, FeriaForm
+from .models import Categoria, Feria, Emprendedor, Visitante, Inscripcion
+from .forms import EmprendedorForm, VisitanteForm, FeriaForm, InscripcionForm
 
 class HomeView(TemplateView):
     """Vista de inicio con estadísticas generales."""

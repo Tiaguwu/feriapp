@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from datetime import date
-from xml.parsers.expat import errors
 
 from django.db import models
 from django.contrib.auth.models import User
