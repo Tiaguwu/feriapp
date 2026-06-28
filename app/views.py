@@ -294,6 +294,15 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
         self.object = feria
         return redirect(self.success_url)
 
+    def dispatch(self, request, *args, **kwargs):
+
+        if not (request.user.is_staff or request.user.is_superuser):
+            messages.error(request, "No tenés permisos para crear ferias.")
+            return redirect('ferias:lista_ferias')
+
+        return super().dispatch(request, *args, **kwargs)
+
+
 class DetalleFeriaView(LoginRequiredMixin, DetailView):
     model = Feria
     template_name = 'ferias/detalle_feria.html'
