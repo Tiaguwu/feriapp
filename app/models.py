@@ -475,3 +475,80 @@ class Inscripcion(models.Model):
                 self.save()
         return []
 
+class Resenia(models.Model):
+    """Representa una reseña de un visitante sobre una feria."""
+
+    emprendedor = models.ForeignKey(Emprendedor, on_delete=models.CASCADE)
+    visitante = models.ForeignKey(Visitante, on_delete=models.CASCADE)
+    feria = models.ForeignKey(Feria, on_delete=models.CASCADE)
+    calificacion = models.PositiveSmallIntegerField()  # 1 a 5
+    comentario = models.TextField(blank=True, null=True)
+    fecha_reseña = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Reseña"
+        verbose_name_plural = "Reseñas"
+        unique_together = ('visitante', 'feria', 'emprendedor')
+        ordering = ['-fecha_reseña']
+
+    def __str__(self):
+        return f"Reseña de {self.visitante} sobre {self.feria}/{self.emprendedor}: {self.calificacion} estrellas"
+
+    def validar_puntaje(self):
+        """Valida que la calificación esté entre 1 y 5."""
+        if not (1 <= self.calificacion <= 5):
+            raise ValueError("La calificación debe estar entre 1 y 5.")
+
+    @classmethod
+    def validate(cls, emprendedor, visitante, feria, calificacion):
+        errors = []
+        if not emprendedor:
+            errors.append("Debe seleccionar un emprendedor.")
+        if not visitante:
+            errors.append("Debe seleccionar un visitante.")
+        if not feria:
+            errors.append("Debe seleccionar una feria.")
+        if calificacion is None or not (1 <= calificacion <= 5):
+            errors.append("La calificación debe estar entre 1 y 5.")
+        # Verificamos que el emprendedor tenga una inscripción confirmada en la feria
+        if emprendedor and feria:
+            if not Inscripcion.objects.filter(
+                emprendedor=emprendedor,
+                feria=feria,
+                estado='confirmada'
+            ).exists():
+                errors.append("El emprendedor no tiene una inscripción confirmada en esta feria.")
+        # Verificamos que no haya reseña previa del mismo visitante para la misma feria y emprendedor
+        if emprendedor and visitante:
+            if cls.objects.filter(
+                emprendedor=emprendedor,
+                visitante=visitante,
+                feria=feria
+            ).exists():
+                errors.append("Ya existe una reseña de este visitante para esta feria y emprendedor.")
+        return errors
+
+    @classmethod
+    def new(cls, emprendedor, visitante, feria, calificacion, comentario=""):
+        errors = cls.validate(emprendedor, visitante, feria, calificacion)
+        if errors:
+            return None, errors
+        
+        resenia = cls.objects.create(
+            emprendedor=emprendedor,
+            visitante=visitante,
+            feria=feria,
+            calificacion=calificacion,
+            comentario=comentario.strip() if comentario else ""
+        )
+        return resenia, []
+
+    def update(self, calificacion, comentario=""):
+        errors = self.__class__.validate(self.emprendedor, self.visitante, self.feria, calificacion)
+        if errors:
+            return errors
+        
+        self.calificacion = calificacion
+        self.comentario = comentario.strip() if comentario else ""
+        self.save()
+        return []
