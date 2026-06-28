@@ -1,7 +1,5 @@
-from pyexpat import errors
-
 from django import forms
-from .models import Emprendedor, Inscripcion, Visitante, Feria, Categoria
+from .models import Emprendedor, Inscripcion, Resenia, Visitante, Feria, Categoria
 from django.core.exceptions import ValidationError
 
 class EmprendedorForm(forms.ModelForm):
@@ -249,3 +247,46 @@ class InscripcionForm(forms.ModelForm):
                 raise ValidationError(error)
 
         return cleaned_data
+
+class ReseniaForm(forms.ModelForm):
+    """Formulario para que un visitante deje una reseña de una feria."""
+
+    class Meta:
+        model = Resenia
+        fields = ['emprendedor', 'feria', 'calificacion', 'comentario']
+        widgets = {
+            'emprendedor': forms.Select(attrs={'class': 'form-select'}),
+            'feria': forms.Select(attrs={'class': 'form-select'}),
+            'calificacion': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 5,
+            }),
+            'comentario': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Contanos tu experiencia...'
+            }),
+        }
+
+        labels = {
+            'emprendedor': 'Emprendedor',
+            'feria': 'Feria',
+            'calificacion': 'Calificación (1-5)',
+            'comentario': 'Comentario',
+        }
+
+    def __init__(self, *args, usuario=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.usuario = usuario
+
+        # Solo ferias activas
+        self.fields['feria'].queryset = Feria.objects.filter(activa=True)
+
+        # Solo emprendedores con inscripciones confirmada en alguna feria
+        self.fields['emprendedor'].queryset = Emprendedor.objects.filter(
+            inscripcion__feria__activa=True,
+            inscripcion__estado='confirmada'
+        ).distinct()
+
+        # CONSULTA: No tiene clean() porque la validacion la hace la vista con Resenia.new() (Correcto?)

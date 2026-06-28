@@ -11,8 +11,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 
-from .models import Categoria, Feria, Emprendedor, Visitante, Inscripcion
-from .forms import EmprendedorForm, VisitanteForm, FeriaForm, InscripcionForm
+from .models import Categoria, Feria, Emprendedor, Resenia, Visitante, Inscripcion
+from .forms import EmprendedorForm, ReseniaForm, VisitanteForm, FeriaForm, InscripcionForm
 
 class HomeView(TemplateView):
     """Vista de inicio con estadísticas generales."""
@@ -211,6 +211,8 @@ class MiPerfilView(LoginRequiredMixin, TemplateView):
     # Si intenta acceder a su perfil sin estar logueado, lo mandamos al login
     login_url = reverse_lazy('login')
 
+    # --- FERIA ---
+
 class NuevaFeriaView(LoginRequiredMixin, CreateView):
     """
     Vista para crear una nueva feria.
@@ -282,6 +284,8 @@ class ListaFeriasView(ListView):
 
         return context
 
+    # --- INSCRIPCIÓN ---
+
 class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Inscripcion
     form_class = InscripcionForm
@@ -347,3 +351,69 @@ class CancelarInscripcionView(LoginRequiredMixin, View):
         else:
             messages.success(request, "Inscripción cancelada exitosamente.")
         return redirect('ferias:mis_inscripciones')
+
+    # --- RESEÑAS ---
+
+class ReseniaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Resenia
+    form_class = ReseniaForm
+    template_name = 'resenias/nueva_resenia.html'
+    success_url = reverse_lazy('ferias:mis_resenias')
+    success_message = "Reseña enviada exitosamente."
+
+    # Protegemos la vista para que solo los visitantes puedan dejar reseñas
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'perfil_visitante'):
+            messages.error(request, "Solo los visitantes pueden dejar una reseña.")
+            return redirect('ferias:lista_ferias')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        visitante = self.request.user.perfil_visitante
+
+        resenia, errors = Resenia.new(
+            emprendedor = form.cleaned_data['emprendedor'],
+            visitante = visitante,
+            feria = form.cleaned_data['feria'],
+            calificacion = form.cleaned_data['calificacion'],
+            comentario = form.cleaned_data.get('comentario', ''),
+        )
+
+        if errors:
+            for error in errors:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+
+        self.object = resenia
+        return redirect(self.get_success_url())
+
+class MisReseniasView(LoginRequiredMixin, ListView):
+    model = Resenia
+    template_name = 'resenias/mis_resenias.html'
+    context_object_name = 'resenias'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'perfil_visitante'):
+            messages.error(request, "Solo los visitantes pueden dejar una reseña.")
+            return redirect('ferias:lista_ferias')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Resenia.objects.filter(
+            visitante=self.request.user.perfil_visitante
+        )
+    
+class EliminarReseniaView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if request.user.is_staff or request.user.is_superuser: # Staff y superuser pueden eliminar cualquier reseña
+            resenia = get_object_or_404(Resenia, pk=pk)
+        else:
+            resenia = get_object_or_404(Resenia, pk=pk, visitante=request.user.perfil_visitante)
+        resenia.delete()
+        messages.success(request, "Reseña eliminada exitosamente.")
+        return redirect('ferias:mis_resenias')

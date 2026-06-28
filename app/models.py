@@ -483,13 +483,13 @@ class Resenia(models.Model):
     feria = models.ForeignKey(Feria, on_delete=models.CASCADE)
     calificacion = models.PositiveSmallIntegerField()  # 1 a 5
     comentario = models.TextField(blank=True, null=True)
-    fecha_reseña = models.DateTimeField(auto_now_add=True)
+    fecha_resenia = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Reseña"
         verbose_name_plural = "Reseñas"
         unique_together = ('visitante', 'feria', 'emprendedor')
-        ordering = ['-fecha_reseña']
+        ordering = ['-fecha_resenia']
 
     def __str__(self):
         return f"Reseña de {self.visitante} sobre {self.feria}/{self.emprendedor}: {self.calificacion} estrellas"

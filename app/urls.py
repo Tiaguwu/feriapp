@@ -27,4 +27,7 @@ urlpatterns = [
     path("inscripciones/", views.MisInscripcionesView.as_view(), name="mis_inscripciones"),
     path("inscripciones/<int:pk>/cancelar/", views.CancelarInscripcionView.as_view(), name="cancelar_inscripcion"),    
 
+    path("resenias/nueva/", views.ReseniaCreateView.as_view(), name="nueva_resenia"),
+    path("resenias/", views.MisReseniasView.as_view(), name="mis_resenias"),
+    path("resenias/<int:pk>/eliminar/", views.EliminarReseniaView.as_view(), name="eliminar_resenia"),
 ]

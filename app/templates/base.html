@@ -30,14 +30,19 @@
           <a href="{% url 'ferias:lista_emprendedores' %}" class="nav-link">Emprendedores</a>
         </li>
         {% if user.is_authenticated %}  
-        <li class="nav-item">
-          <a href="{% url 'ferias:lista_visitantes' %}" class="nav-link">Visitantes</a>
-        </li>
+          <li class="nav-item">
+            <a href="{% url 'ferias:lista_visitantes' %}" class="nav-link">Visitantes</a>
+          </li>
         {% endif %}
         {% if user.is_authenticated and user.perfil_emprendedor %}
-        <li class="nav-item">
-          <a href="{% url 'ferias:mis_inscripciones' %}" class="nav-link">Mis Inscripciones</a>
-        </li>
+          <li class="nav-item">
+            <a href="{% url 'ferias:mis_inscripciones' %}" class="nav-link">Mis Inscripciones</a>
+          </li>
+        {% endif %}
+        {% if user.is_authenticated and user.perfil_visitante %}
+          <li class="nav-item">
+            <a href="{% url 'ferias:mis_resenias' %}" class="nav-link">Mis Reseñas</a>
+          </li>
         {% endif %}
       </ul>
 
