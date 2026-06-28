@@ -11,6 +11,7 @@ from app.models import Feria
 from app.models import Visitante
 from app.models import Inscripcion
 from app.models import Categoria
+from app.models import Resenia
 
 class FeriaModelTest(TestCase):
     """Verifica validaciones y operaciones básicas del modelo Feria."""
@@ -417,7 +418,7 @@ class InscripcionModelTest(TestCase):
 
     def test_validate_datos_correctos_retorna_lista_vacia(self):
         errors = Inscripcion.validate(
-            self.emprendedor,
+            self.emp2,
             self.feria,
             self.user_admin
         )
@@ -611,7 +612,7 @@ class CategoriaModelTest(TestCase):
 
     def test_new_con_nombre_duplicado_deberia_permitir_segun_validate(self):
         categoria1, _ = Categoria.new("Duplicada", "Descripción 1")
-        
+
         # Intentar crear otra con el mismo nombre
         # Esto debería fallar a nivel de BD
         with self.assertRaises(Exception):
@@ -634,9 +635,9 @@ class CategoriaModelTest(TestCase):
         """Verifica que update() no modifica si los datos son inválidos."""
         nombre_original = self.categoria.nombre
         descripcion_original = self.categoria.descripcion
-        
+
         errors = self.categoria.update("", "")
-        
+
         self.assertTrue(len(errors) > 0)
         self.categoria.refresh_from_db()
         self.assertEqual(self.categoria.nombre, nombre_original)
@@ -645,11 +646,166 @@ class CategoriaModelTest(TestCase):
     def test_update_con_nombre_vacio_retorna_error_y_no_modifica(self):
         """Verifica que update() con nombre vacío retorna error."""
         descripcion_original = self.categoria.descripcion
-        
+
         errors = self.categoria.update("", "Nueva descripción")
-        
+
         self.assertIn("El nombre de la categoría es obligatorio.", errors)
         self.categoria.refresh_from_db()
         self.assertEqual(self.categoria.nombre, "Tecnología")
         self.assertEqual(self.categoria.descripcion, descripcion_original)
+
+
+class ReseniaModelTest(TestCase):
+    """Verifica validaciones y operaciones básicas del modelo Resenia."""
+
+    def setUp(self):
+        self.categoria = Categoria.objects.create(
+            nombre="Artesanías",
+            descripcion="Ferias de artesanos"
+        )
+
+        self.feria = Feria.objects.create(
+            nombre="Feria de Invierno",
+            fecha_inicio=date(2026, 6, 1),
+            fecha_fin=date(2026, 6, 15),
+            ubicacion="Patio Olmos",
+            capacidad_puestos=5,
+        )
+        self.feria.categorias.add(self.categoria)
+
+        self.user_emp = User.objects.create_user(username='emp_resenia', password='123')
+        self.emprendedor = Emprendedor.objects.create(
+            nombre="Carlos", apellido="Romero", email="carlos@ejemplo.com",
+            rubro="Gastronomía", telefono="3514002002", usuario=self.user_emp
+        )
+
+        self.user_vis = User.objects.create_user(username='vis_resenia', password='123')
+        self.visitante = Visitante.objects.create(
+            nombre="Juan", apellido="Martínez", email="juan@ejemplo.com",
+            usuario=self.user_vis
+        )
+
+        self.user_admin = User.objects.create_user(username='admin_resenia', password='123')
+
+        self.inscripcion = Inscripcion.objects.create(
+            emprendedor=self.emprendedor,
+            feria=self.feria,
+            numero_puesto=1,
+            registrado_por=self.user_admin,
+            estado="confirmada"
+        )
+
+        self.resenia = Resenia.objects.create(
+            emprendedor=self.emprendedor,
+            visitante=self.visitante,
+            feria=self.feria,
+            calificacion=4,
+            comentario="Muy buena experiencia."
+        )
+
+    # --- __str__ ---
+
+    def test_str_retorna_formato_correcto(self):
+        self.assertEqual(
+            str(self.resenia),
+            "Reseña de Martínez Juan sobre Feria de Invierno/Romero Carlos: 4 estrellas"
+        )
+
+    # --- validate ---
+
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        user_vis2 = User.objects.create_user(username='vis2_resenia', password='123')
+        visitante2 = Visitante.objects.create(
+            nombre="Sofía", apellido="García", email="sofia@ejemplo.com",
+            usuario=user_vis2
+        )
+        errors = Resenia.validate(self.emprendedor, visitante2, self.feria, 5)
+        self.assertEqual(errors, [])
+
+    def test_validate_calificacion_cero_retorna_error(self):
+        errors = Resenia.validate(self.emprendedor, self.visitante, self.feria, 0)
+        self.assertIn("La calificación debe estar entre 1 y 5.", errors)
+
+    def test_validate_calificacion_seis_retorna_error(self):
+        errors = Resenia.validate(self.emprendedor, self.visitante, self.feria, 6)
+        self.assertIn("La calificación debe estar entre 1 y 5.", errors)
+
+    def test_validate_feria_futura_retorna_error(self):
+        feria_futura = Feria.objects.create(
+            nombre="Feria Futura",
+            fecha_inicio=date(2027, 9, 1),
+            fecha_fin=date(2027, 9, 3),
+            ubicacion="Plaza Central",
+            capacidad_puestos=5,
+        )
+        feria_futura.categorias.add(self.categoria)
+        errors = Resenia.validate(self.emprendedor, self.visitante, feria_futura, 4)
+        self.assertIn("La feria aún no ha comenzado.", errors)
+
+    def test_validate_emprendedor_sin_inscripcion_confirmada_retorna_error(self):
+        user_emp2 = User.objects.create_user(username='emp2_resenia', password='123')
+        emp_sin_insc = Emprendedor.objects.create(
+            nombre="Sin", apellido="Inscripcion", email="sin@ejemplo.com",
+            rubro="Textil", telefono="3514000000", usuario=user_emp2
+        )
+        errors = Resenia.validate(emp_sin_insc, self.visitante, self.feria, 4)
+        self.assertIn("El emprendedor no tiene una inscripción confirmada en esta feria.", errors)
+
+    def test_validate_resenia_duplicada_retorna_error(self):
+        errors = Resenia.validate(self.emprendedor, self.visitante, self.feria, 5)
+        self.assertIn("Ya existe una reseña de este visitante para esta feria y emprendedor.", errors)
+
+    def test_validate_sin_emprendedor_retorna_error(self):
+        errors = Resenia.validate(None, self.visitante, self.feria, 4)
+        self.assertIn("Debe seleccionar un emprendedor.", errors)
+
+    def test_validate_sin_visitante_retorna_error(self):
+        errors = Resenia.validate(self.emprendedor, None, self.feria, 4)
+        self.assertIn("Debe seleccionar un visitante.", errors)
+
+    # --- new ---
+
+    def test_new_crea_resenia_con_datos_validos(self):
+        user_vis2 = User.objects.create_user(username='vis2_new', password='123')
+        visitante2 = Visitante.objects.create(
+            nombre="Diego", apellido="Torres", email="diego@ejemplo.com",
+            usuario=user_vis2
+        )
+        resenia, errors = Resenia.new(
+            emprendedor=self.emprendedor,
+            visitante=visitante2,
+            feria=self.feria,
+            calificacion=5,
+            comentario="Excelente."
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(resenia)
+        self.assertEqual(resenia.calificacion, 5)
+        self.assertTrue(Resenia.objects.filter(visitante=visitante2).exists())
+
+    def test_new_con_datos_invalidos_no_crea(self):
+        count_antes = Resenia.objects.count()
+        resenia, errors = Resenia.new(None, None, None, 0)
+        self.assertIsNone(resenia)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Resenia.objects.count(), count_antes)
+
+    def test_new_duplicada_no_crea(self):
+        count_antes = Resenia.objects.count()
+        resenia, errors = Resenia.new(
+            emprendedor=self.emprendedor,
+            visitante=self.visitante,
+            feria=self.feria,
+            calificacion=3,
+        )
+        self.assertIsNone(resenia)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Resenia.objects.count(), count_antes)
+
+    # --- delete ---
+
+    def test_delete_elimina_resenia(self):
+        pk = self.resenia.pk
+        self.resenia.delete()
+        self.assertFalse(Resenia.objects.filter(pk=pk).exists())
 

@@ -546,13 +546,3 @@ class Resenia(models.Model):
             comentario=comentario.strip() if comentario else ""
         )
         return resenia, []
-
-    def update(self, calificacion, comentario=""):
-        errors = self.__class__.validate(self.emprendedor, self.visitante, self.feria, calificacion)
-        if errors:
-            return errors
-        
-        self.calificacion = calificacion
-        self.comentario = comentario.strip() if comentario else ""
-        self.save()
-        return []
