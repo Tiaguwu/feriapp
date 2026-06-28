@@ -231,7 +231,7 @@ python manage.py runserver
 ### 📦 2. Modelos (`app/models.py`)
 *Patrón obligatorio: todos los modelos deben incluir los métodos `validate()`, `new()` y `update()`.*
 
-- [ ] **Categoria** (nombre, descripcion).
+- [x] **Categoria** (nombre, descripcion).
     - [ ] `validate` / `new` / `update` 
     - [ ] **Método de negocio**: `obtener_ferias_activas()` (Retorna las ferias vigentes asociadas a esta categoría).
 
@@ -250,11 +250,11 @@ python manage.py runserver
 
 - [x] **Inscripcion** (emprendedor, feria, numero_puesto, fecha_inscripcion, estado, registrado_por).
     - [x] `validate` / `new` / `update` 
-    - [ ] **Método de negocio**: `cambiar_estado_inscripcion(nuevo_estado)` (Maneja la lógica transicional entre confirmada, lista de espera o cancelada).
+    - [x] **Método de negocio**: `cambiar_estado_inscripcion(nuevo_estado)` (Maneja la lógica transicional entre confirmada, lista de espera o cancelada).
 
-- [ ] **Resena** (feriante, visitante, puntaje, comentario, fecha_creacion).
-    - [ ] `validate` / `new` / `update` 
-    - [ ] **Método de negocio**: `validar_escala_puntaje()` (Valida que la calificación se encuentre estrictamente dentro del rango establecido).
+- [x] **Resena** (feriante, visitante, puntaje, comentario, fecha_creacion).
+    - [x] `validate` / `new` / `update` 
+    - [x] **Método de negocio**: `validar_escala_puntaje()` (Valida que la calificación se encuentre estrictamente dentro del rango establecido).
 
 - [ ] **Notificacion** *(Opcional 1)* (usuario, asunto, mensaje, leida, fecha_creacion).
     - [ ] `validate` / `new` / `update` 
@@ -269,10 +269,10 @@ python manage.py runserver
 ### ⚙️ 3. Formularios (`app/forms.py`)
 *Requisito: Al menos 2 formularios deben tener validación personalizada.*
 
-- [ ] `RegistroUsuarioForm` (Para el Sign Up de usuarios).
-- [ ] `FeriaForm` (Formulario de creación de feria).
-- [ ] `InscripcionForm` (Formulario de inscripción a una feria).
-- [ ] `ResenaForm` (Para calificar a un emprendedor).
+- [x] `RegistroUsuarioForm` (Para el Sign Up de usuarios).
+- [x] `FeriaForm` (Formulario de creación de feria).
+- [x] `InscripcionForm` (Formulario de inscripción a una feria).
+- [x] `ResenaForm` (Para calificar a un emprendedor).
 - [ ] `[Validación Personalizada 1]` aplicada.
 - [ ] `[Validación Personalizada 2]` aplicada.
 
@@ -281,18 +281,18 @@ python manage.py runserver
 ### 🖥️ 4. Vistas (`app/views.py`)
 *Requisito: Únicamente Class Based Views (CBV). Todas protegidas con `@login_required` o `LoginRequiredMixin`.*
 
-- [ ] `HomeView`: Home con estadísticas generales calculadas de la app.
-- [ ] `FeriaListView`: Tabla de ferias con filtro por categoría.
-- [ ] `FeriaDetailView`: Detalle con info, emprendedores y barra de ocupación.
-- [ ] `FeriaCreateView`: Formulario de creación.
+- [x] `HomeView`: Home con estadísticas generales calculadas de la app.
+- [x] `FeriaListView`: Tabla de ferias con filtro por categoría.
+- [x] `FeriaDetailView`: Detalle con info, emprendedores y barra de ocupación.
+- [x] `FeriaCreateView`: Formulario de creación.
 - [x] `EmprendedorListView`: Listado general de emprendedores.
 - [ ] `PerfilUsuarioView` : Perfil de usuario.
-- [ ] `EmprendedorDetailView` : Mustra informacion de los emprendedores.
+- [x] `EmprendedorDetailView` : Mustra informacion de los emprendedores.
 - [x] `VisitanteListView`: Listado general de visitantes.
-- [ ] `InscripcionCreateView`: Solicitar inscripción.
-- [ ] `InscripcionListView`: Ver mis inscripciones (para un emprendedor).
-- [ ] `InscripcionDeleteView` / Update: Cancelación de inscripciones.
-- [ ] `ResenaCreateView`: Dejar una reseña.
+- [x] `InscripcionCreateView`: Solicitar inscripción.
+- [x] `InscripcionListView`: Ver mis inscripciones (para un emprendedor).
+- [x] `InscripcionDeleteView` / Update: Cancelación de inscripciones.
+- [x] `ResenaCreateView`: Dejar una reseña.
 - [ ] *(Opcional)* Lógica para clonar ferias (Ediciones).
 - [ ] *(Opcional)* Sección de Feriantes Destacados (calculado por reseñas).
 
@@ -301,44 +301,44 @@ python manage.py runserver
 ### 🎨 5. Templates HTML (`app/templates/`)
 *Requisito: Bootstrap 5 responsivos. Frontend sin uso de Javascript para lógica compleja.*
 
-- [ ] `base.html` (Navbar dinámica: cambia según autenticación).
-- [ ] `home.html` (Renderiza el bloque de estadísticas generales).
-- [ ] **Subcarpeta `ferias/`**
-    - [ ] `lista_ferias.html` (Tabla responsiva de ferias con barra de filtros por categoría).
-    - [ ] `detalle_feria.html` (Muestra el detalle estructurado de la feria y los feriantes asignados).
-    - [ ] `formulario_feria.html` (Interfaz limpia de Bootstrap para creación de ferias).
+- [x] `base.html` (Navbar dinámica: cambia según autenticación).
+- [x] `home.html` (Renderiza el bloque de estadísticas generales).
+- [x] **Subcarpeta `ferias/`**
+    - [x] `lista_ferias.html` (Tabla responsiva de ferias con barra de filtros por categoría).
+    - [x] `detalle_feria.html` (Muestra el detalle estructurado de la feria y los feriantes asignados).
+    - [x] `formulario_feria.html` (Interfaz limpia de Bootstrap para creación de ferias).
 - [x] **Subcarpeta `emprendedores/`**
     - [x] `lista_emprendedores.html` (Tabla Bootstrap con columnas ordenadas y enlaces directos).
     - [x] `detalle_emprendedor.html` (Ficha limpia del perfil de usuario y rubros comerciales).
 - [x] **Subcarpeta `visitantes/`**
     - [x] `lista_visitantes.html` (Visualización ordenada de los asistentes al sistema).
 - [ ] **Subcarpeta `inscripciones/`**
-    - [ ] `formulario_inscripcion.html` (Campos adaptados para postularse a puestos).
-    - [ ] `mis_inscripciones.html` (Listado con badges de color según el estado: confirmada/espera/cancelada).
-- [ ] **Subcarpeta `resenas/`**
-    - [ ] `formulario_resena.html` (Campos estructurados para comentarios y puntajes).
+    - [x] `formulario_inscripcion.html` (Campos adaptados para postularse a puestos).
+    - [x] `mis_inscripciones.html` (Listado con badges de color según el estado: confirmada/espera/cancelada).
+- [x] **Subcarpeta `resenas/`**
+    - [x] `formulario_resena.html` (Campos estructurados para comentarios y puntajes).
 - [x] **Subcarpeta `registration/`** (Ubicada en la raíz de templates)[cite: 31].
-    - [ ] `login.html` (Formulario de inicio de sesión estilizado con Bootstrap y libre de CSS inline).
-    - [ ] `registro.html` (Interfaz de alta de usuarios comunes).
+    - [x] `login.html` (Formulario de inicio de sesión estilizado con Bootstrap y libre de CSS inline).
+    - [x] `registro.html` (Interfaz de alta de usuarios comunes).
 
 ---
 
 ### 🌐 6. Enrutamiento (`app/urls.py` y `feriapp/urls.py`)
-- [ ] Ruta de Inicio/home (`/`).
+- [x] Ruta de Inicio/home (`/`).
 - [ ] Rutas de Autenticación (`accounts/`) conectadas
-- [ ] Rutas de Ferias (`/ferias/`, `/ferias/<pk>/`, `/ferias/nueva/`).
+- [x] Rutas de Ferias (`/ferias/`, `/ferias/<pk>/`, `/ferias/nueva/`).
 - [x] Rutas de Emprendedores (`/emprendedores/`, `/emprendedores/<pk>/`).
 - [x] Rutas de Visitantes (`/visitantes/`).
-- [ ] Rutas de Inscripciones (`/inscripciones/`, `/inscripciones/nueva/`).
-- [ ] Rutas de Reseñas (,`/resenas/``/resenas/nueva/`).
+- [x] Rutas de Inscripciones (`/inscripciones/`, `/inscripciones/nueva/`).
+- [x] Rutas de Reseñas (,`/resenas/``/resenas/nueva/`).
 
 ---
 
 ### 🔐 7. Autenticación y Permisos
-- [ ] Login funcionando.
-- [ ] Logout funcionando.
-- [ ] Registro (Sign up) funcionando.
-- [ ] Permisos configurables según tipo de usuario (Admin/Organización, Emprendedor, Visitante).
+- [x] Login funcionando.
+- [x] Logout funcionando.
+- [x] Registro (Sign up) funcionando.
+- [x] Permisos configurables según tipo de usuario (Admin/Organización, Emprendedor, Visitante).
 
 ---
 
@@ -347,9 +347,9 @@ python manage.py runserver
 - [x] `FeriaAdmin` (`list_display`, `list_filter` u otras personalizaciones).
 - [x] `EmprendedorAdmin`.
 - [x] `VisitanteAdmin`.
-- [ ] `CategoriaAdmin`.
-- [ ] `InscripcionAdmin`.
-- [ ] `ResenaAdmin`.
+- [x] `CategoriaAdmin`.
+- [x] `InscripcionAdmin`.
+- [x] `ResenaAdmin`.
 - [ ] `NotificacionAdmin`
 - [ ] `SectorAdmin`
 
@@ -366,9 +366,9 @@ python manage.py runserver
     - [ ] `test_metodo_puede_reseñar`
 - [ ] Tests de `Categoria` (`validate`, `new`, `update`).
     - [ ] `test_metodo_ferias_activas`
-- [ ] Tests de `Inscripcion` (`validate`, `new`, `update`).
+- [x] Tests de `Inscripcion` (`validate`, `new`, `update`).
     - [ ] `test_metodo_cambio_estado`
-- [ ] Tests de `Resena` (`validate`, `new`, `update`).
+- [x] Tests de `Resena` (`validate`, `new`, `update`).
     - [ ] `test_metodo_escala_puntaje`
 
 ---

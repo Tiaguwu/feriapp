@@ -76,3 +76,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = 'ferias:home' 
 LOGOUT_REDIRECT_URL = 'ferias:home'
+
+LOGIN_URL = 'login'
