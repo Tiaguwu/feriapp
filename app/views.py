@@ -32,12 +32,6 @@ class DetalleEmprendedorView(DetailView):
     template_name = 'emprendedores/detalle_emprendedor.html'
     context_object_name = 'emprendedor'
 
-class ListaVisitanteView(ListView):
-
-    model = Visitante
-    template_name = 'visitantes/lista_visitantes.html'
-    context_object_name = 'visitantes'
-
 class EmprendedorCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Emprendedor
     form_class = EmprendedorForm
@@ -107,6 +101,12 @@ class EmprendedorUpdateView(EmprendedorRequiredMixin, SuccessMessageMixin, Updat
         return super().form_valid(form)
 
     # --- VISITANTE ---
+
+class ListaVisitanteView(ListView):
+
+    model = Visitante
+    template_name = 'visitantes/lista_visitantes.html'
+    context_object_name = 'visitantes'
 
 class VisitanteCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Visitante
@@ -219,17 +219,17 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
     form_class = FeriaForm
     template_name = 'ferias/nueva_feria.html'
     success_url = reverse_lazy('ferias:lista_ferias')
-    
+
     def form_valid(self, form):
         """
         Guarda la feria usando el método new() del modelo.
         El formulario ya validó los datos con Feria.validate()
         """
         cleaned_data = form.cleaned_data
-        
+
         # Las categorías vienen como QuerySet del formulario
         categorias = cleaned_data.get('categorias')
-        
+
         feria, errors = Feria.new(
             nombre=cleaned_data['nombre'],
             categorias=categorias,
@@ -238,13 +238,14 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
             ubicacion=cleaned_data['ubicacion'],
             capacidad_puestos=cleaned_data['capacidad_puestos']
         )
-        
+
         if errors:
             for error in errors:
                 form.add_error(None, error)
             return self.form_invalid(form)
-        
-        return super().form_valid(form)
+
+        self.get_object = feria
+        return redirect(self.success_url)
 
 class DetalleFeriaView(DetailView):
     model = Feria
@@ -261,24 +262,24 @@ class ListaFeriasView(ListView):
     def get_queryset(self):
         """Retorna ferias activas, opcionalmente filtradas por categoría."""
         queryset = Feria.objects.filter(activa=True)
-        
+
         categoria_id = self.request.GET.get('categoria')
-        
+
         if categoria_id:
             queryset = queryset.filter(categorias__id=categoria_id)
-        
+
         return queryset
     
     def get_context_data(self, **kwargs):
         """Agrega la lista de categorías al contexto para mostrar en el template."""
         context = super().get_context_data(**kwargs)
         context['categorias'] = Categoria.objects.filter(activa=True)
-        
+
         # Para mantener seleccionada la categoría actual en el selector
         categoria_id = self.request.GET.get('categoria')
         if categoria_id:
             context['categoria_seleccionada'] = int(categoria_id)
-        
+
         return context
 
 class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
@@ -292,7 +293,7 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['usuario'] = self.request.user
         return kwargs
-    
+
     def form_valid(self, form):
         feria = form.cleaned_data['feria']
 
@@ -301,7 +302,7 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             emprendedor = form.cleaned_data['emprendedor']
         else:
             emprendedor = self.request.user.perfil_emprendedor
-        
+
         inscripcion, errors = Inscripcion.new(
             emprendedor=emprendedor,
             feria=feria,
@@ -312,10 +313,9 @@ class NuevaInscripcionView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             for error in errors:
                 form.add_error(None, error)
             return self.form_invalid(form)
-        
+
         self.object = inscripcion
         return redirect(self.get_success_url())
-    
 
 class MisInscripcionesView(LoginRequiredMixin, ListView):
     model = Inscripcion
@@ -334,13 +334,13 @@ class MisInscripcionesView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
 class CancelarInscripcionView(LoginRequiredMixin, View):
-    
+
     def post(self, request, pk):
         if request.user.is_staff or request.user.is_superuser: # Staff y superuser pueden cancelar cualquier inscripción
             inscripcion = get_object_or_404(Inscripcion, pk=pk)
         else:
             inscripcion = get_object_or_404(Inscripcion, pk=pk, emprendedor=request.user.perfil_emprendedor)
-        
+
         errores = inscripcion.update(nuevo_estado='cancelada')
         if errores:
             messages.error(request, "No se pudo cancelar la inscripción: " + ", ".join(errores))
