@@ -1,9 +1,8 @@
 """Configuración del panel de administración para la app principal."""
 
 from django.contrib import admin
-from .models import Feria, Visitante, Emprendedor
+from .models import Categoria, Feria, Inscripcion, Visitante, Emprendedor
 
-# TODO: reemplazar por @admin.register con list_display, list_filter, search_fields
 @admin.register(Feria)
 class FeriaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'mostrar_categorias', 'fecha_inicio', 'fecha_fin', 'ubicacion')
@@ -26,3 +25,14 @@ class VisitanteAdmin(admin.ModelAdmin):
     list_display = ('apellido', 'nombre', 'email', 'fecha_registro')
     list_filter = ('fecha_registro',)
     search_fields = ('apellido', 'nombre', 'email')
+
+@admin.register(Inscripcion)
+class InscripcionAdmin(admin.ModelAdmin):
+    list_display = ('emprendedor', 'feria', 'fecha_inscripcion', 'estado')
+    list_filter = ('emprendedor', 'feria', 'estado')
+    search_fields = ('emprendedor__apellido', 'emprendedor__nombre', 'feria__nombre')
+
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ('nombre',)
+    search_fields = ('nombre',)
