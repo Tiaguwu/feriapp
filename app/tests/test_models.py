@@ -4,7 +4,6 @@ from datetime import date
 
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.contrib.auth.models import User
 
 from app.models import Emprendedor
 from app.models import Feria
