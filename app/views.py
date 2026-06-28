@@ -14,20 +14,20 @@ from .mixins import EmprendedorRequiredMixin, VisitanteRequiredMixin
 from .models import Categoria, Feria, Emprendedor, Resenia, Visitante, Inscripcion
 from .forms import EmprendedorForm, ReseniaForm, VisitanteForm, FeriaForm, InscripcionForm
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
     """Vista de inicio con estadísticas generales."""
 
     template_name = "ferias/home.html"
 
     # --- EMPRENDEDOR ---
 
-class ListaEmprendedorView(ListView):
+class ListaEmprendedorView(LoginRequiredMixin, ListView):
     
     model = Emprendedor
     template_name = 'emprendedores/lista_emprendedores.html'
     context_object_name = 'emprendedores'
 
-class DetalleEmprendedorView(DetailView):
+class DetalleEmprendedorView(LoginRequiredMixin, DetailView):
     model = Emprendedor
     template_name = 'emprendedores/detalle_emprendedor.html'
     context_object_name = 'emprendedor'
@@ -102,7 +102,7 @@ class EmprendedorUpdateView(EmprendedorRequiredMixin, SuccessMessageMixin, Updat
 
     # --- VISITANTE ---
 
-class ListaVisitanteView(ListView):
+class ListaVisitanteView(LoginRequiredMixin, ListView):
 
     model = Visitante
     template_name = 'visitantes/lista_visitantes.html'
@@ -249,12 +249,12 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
         self.get_object = feria
         return redirect(self.success_url)
 
-class DetalleFeriaView(DetailView):
+class DetalleFeriaView(LoginRequiredMixin, DetailView):
     model = Feria
     template_name = 'ferias/detalle_feria.html'
     context_object_name = 'feria'
 
-class ListaFeriasView(ListView):
+class ListaFeriasView(LoginRequiredMixin, ListView):
     """Lista todas las ferias activas."""
 
     model = Feria

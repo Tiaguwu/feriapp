@@ -1,7 +1,6 @@
 """Tests de comportamiento para el modelo Feria."""
 
 from datetime import date
-from pyexpat import errors
 
 from django.test import TestCase
 from django.contrib.auth.models import User
