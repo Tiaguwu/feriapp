@@ -42,7 +42,20 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['categorias_destacadas'] = Categoria.objects.annotate(
             total_ferias=Count('ferias')
         ).filter(total_ferias__gt=0).order_by('-total_ferias')[:5]
-        
+
+        # Datos para el gráfico de reseñas por feria según   por calificación
+        resenias_por_feria = []
+        for feria in Feria.objects.filter(activa=True, fecha_inicio__lte=date.today()):
+            conteos = {i: 0 for i in range(1, 6)}
+            for r in Resenia.objects.filter(feria=feria):
+                conteos[r.calificacion] += 1
+            resenias_por_feria.append({
+                'nombre': feria.nombre,
+                'conteos': [conteos[i] for i in range(1, 6)],
+                'total': sum(conteos.values()),
+            })
+        context['resenias_por_feria'] = resenias_por_feria
+
         return context
 
     # --- EMPRENDEDOR ---

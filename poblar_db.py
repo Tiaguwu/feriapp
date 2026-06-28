@@ -77,7 +77,16 @@ ferias_data = [
         "ubicacion": "Campus UNC, Córdoba",
         "capacidad_puestos": 3,
     },
-    # Feria pasada — para habilitar reseñas
+    # Feria en curso — comenzó pero no terminó
+    {
+        "nombre": "Festival de Otoño 2026",
+        "categorias": ["Decoración", "Indumentaria"],
+        "fecha_inicio": date(2026, 6, 20),
+        "fecha_fin": date(2026, 7, 5),
+        "ubicacion": "Paseo del Buen Pastor, Córdoba",
+        "capacidad_puestos": 6,
+    },
+    # Ferias pasadas — para habilitar reseñas
     {
         "nombre": "Feria de Invierno 2026",
         "categorias": ["Artesanías", "Gastronomía"],
@@ -85,6 +94,14 @@ ferias_data = [
         "fecha_fin": date(2026, 6, 15),
         "ubicacion": "Patio Olmos, Córdoba",
         "capacidad_puestos": 5,
+    },
+    {
+        "nombre": "Expo Artesanal Patagónica",
+        "categorias": ["Artesanías", "Indumentaria"],
+        "fecha_inicio": date(2026, 5, 10),
+        "fecha_fin": date(2026, 5, 12),
+        "ubicacion": "Centro Cívico, Bariloche",
+        "capacidad_puestos": 4,
     },
 ]
 ferias = {}
@@ -173,36 +190,54 @@ for emp_username, feria_nombre in inscripciones_futuras:
     else:
         print(f"  ✓ {emp.apellido} en '{feria_nombre}' [{insc.estado}]")
 
-# ---------- INSCRIPCIONES (feria pasada, directo a BD) ----------
+# ---------- INSCRIPCIONES (ferias pasadas y en curso, directo a BD) ----------
 # Usamos objects.create() porque new() valida que la feria no haya terminado.
 # Para datos de seed es correcto saltear esa regla de negocio.
-print("Creando inscripciones en feria pasada (Feria de Invierno 2026)...")
-feria_invierno = ferias.get("Feria de Invierno 2026")
+print("Creando inscripciones en ferias pasadas/en curso...")
 insc_pasadas = [
-    ("emp1", 1), ("emp2", 2), ("emp3", 3), ("emp4", 4),
+    ("emp1", "Feria de Invierno 2026",      1),
+    ("emp2", "Feria de Invierno 2026",      2),
+    ("emp3", "Feria de Invierno 2026",      3),
+    ("emp4", "Feria de Invierno 2026",      4),
+    ("emp3", "Expo Artesanal Patagónica",   1),
+    ("emp5", "Expo Artesanal Patagónica",   2),
+    ("emp6", "Expo Artesanal Patagónica",   3),
+    ("emp1", "Festival de Otoño 2026",      1),
+    ("emp5", "Festival de Otoño 2026",      2),
+    ("emp6", "Festival de Otoño 2026",      3),
 ]
-for emp_username, numero_puesto in insc_pasadas:
+for emp_username, feria_nombre, numero_puesto in insc_pasadas:
     emp = emprendedores.get(emp_username)
-    if not emp or not feria_invierno:
+    feria = ferias.get(feria_nombre)
+    if not emp or not feria:
         continue
-    insc = Inscripcion.objects.create(
+    Inscripcion.objects.create(
         emprendedor=emp,
-        feria=feria_invierno,
+        feria=feria,
         numero_puesto=numero_puesto,
         registrado_por=admin_user,
         estado='confirmada',
     )
-    print(f"  ✓ {emp.apellido} en 'Feria de Invierno 2026' [confirmada, puesto {numero_puesto}]")
+    print(f"  ✓ {emp.apellido} en '{feria_nombre}' [confirmada, puesto {numero_puesto}]")
 
 # ---------- RESEÑAS ----------
 print("Creando reseñas...")
 resenias_data = [
+    # Feria de Invierno 2026
     ("vis1", "emp1", "Feria de Invierno 2026", 5, "Excelente atención y productos únicos."),
     ("vis2", "emp2", "Feria de Invierno 2026", 4, "Muy rica la comida, volvería sin dudas."),
     ("vis3", "emp3", "Feria de Invierno 2026", 5, "Ropa increíble, muy buen gusto."),
     ("vis1", "emp4", "Feria de Invierno 2026", 3, "Interesante pero le faltó variedad."),
     ("vis4", "emp2", "Feria de Invierno 2026", 4, "Muy buena propuesta gastronómica."),
     ("vis2", "emp1", "Feria de Invierno 2026", 5, "Los tejidos son increíbles, altísima calidad."),
+    # Expo Artesanal Patagónica
+    ("vis1", "emp3", "Expo Artesanal Patagónica", 4, "Muy variado, buen ambiente."),
+    ("vis3", "emp5", "Expo Artesanal Patagónica", 2, "Esperaba más variedad de productos."),
+    ("vis4", "emp6", "Expo Artesanal Patagónica", 5, "Increíble calidad artesanal."),
+    ("vis2", "emp3", "Expo Artesanal Patagónica", 3, "Bien pero un poco caro."),
+    # Festival de Otoño 2026 (en curso, ya empezó)
+    ("vis1", "emp1", "Festival de Otoño 2026", 5, "Excelente decoración y atención."),
+    ("vis3", "emp5", "Festival de Otoño 2026", 4, "Muy lindo el ambiente otoñal."),
 ]
 for vis_username, emp_username, feria_nombre, calificacion, comentario in resenias_data:
     vis = visitantes.get(vis_username)
@@ -225,3 +260,7 @@ print("\nUsuarios creados:")
 print("  admin          / admin1234  (superusuario)")
 print("  emp1..emp6     / test1234   (emprendedores)")
 print("  vis1..vis4     / test1234   (visitantes)")
+print("\nFerias:")
+print("  Futuras:    Feria de Primavera, Expo Gastronómica, Mercado de Diseño, Tech & Makers")
+print("  En curso:   Festival de Otoño 2026")
+print("  Terminadas: Feria de Invierno 2026, Expo Artesanal Patagónica")

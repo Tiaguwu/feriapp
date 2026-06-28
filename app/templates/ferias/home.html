@@ -91,7 +91,7 @@
                             {% for categoria in categorias_destacadas %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ categoria.nombre }}
-                                    <span class="badge bg-primary rounded-pill">
+                                    <span class="badge bg-success rounded-pill">
                                         {{ categoria.total_ferias }} feria{{ categoria.total_ferias|pluralize }}
                                     </span>
                                 </li>
@@ -105,9 +105,74 @@
         </div>
     </div>
 
+    <!-- Gráfico de reseñas por feria -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Reseñas por feria</h4>
+                </div>
+                <div class="card-body">
+                    {% if resenias_por_feria %}
+
+                        {# json_script serializa la variable Python a JSON seguro en un tag script oculto #}
+
+                        {{ resenias_por_feria|json_script:"datos-resenias" }}
+
+                        {# El canvas es el lienzo donde Chart.js va a dibujar el gráfico #}
+                        <canvas id="graficoResenias" height="100"></canvas>
+
+                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                        <script>
+                            // Leemos el JSON que Django inyectó en el tag anterior
+                            const datos = JSON.parse(document.getElementById('datos-resenias').textContent);
+
+                            // Extraemos los nombres de las ferias para el eje X
+                            const labels = datos.map(d => d.nombre);
+
+                            // Colores para cada calificación (1 a 5 estrellas)
+                            const colores = ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'];
+
+                            // Creamos un dataset por cada calificación (1★ a 5★)
+                            // Cada dataset es una barra de color distinto dentro de cada feria
+                            const datasets = [1, 2, 3, 4, 5].map((estrella, i) => ({
+                                label: estrella + ' ★',
+                                // Para cada feria tomamos el conteo de esa calificación y luego ponemos el color correspondiente
+                                data: datos.map(d => d.conteos[i]),
+                                backgroundColor: colores[i],
+                            }));
+
+                            new Chart(document.getElementById('graficoResenias'), {
+                                type: 'bar',
+                                data: { labels, datasets },
+                                options: {
+                                    responsive: true,
+                                    plugins: {
+                                        legend: { position: 'top' },
+                                    },
+                                    scales: {
+                                        x: { stacked: false }, // barras separadas, no apiladas
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: { stepSize: 1 } // solo números enteros en eje Y
+                                        }
+                                    }
+                                }
+                            });
+                        </script>
+                    {% else %}
+                        <p class="text-muted">No hay reseñas registradas todavía.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
     <div class="row mt-4">
         <div class="col-12 text-center">
-            <a href="{% url 'ferias:lista_ferias' %}" class="btn btn-primary">
+            <a href="{% url 'ferias:lista_ferias' %}" class="btn btn-success">
                 Ver todas las ferias
             </a>
         </div>
