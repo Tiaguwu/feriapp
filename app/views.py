@@ -272,7 +272,7 @@ class NuevaFeriaView(LoginRequiredMixin, CreateView):
                 form.add_error(None, error)
             return self.form_invalid(form)
 
-        self.get_object = feria
+        self.object = feria
         return redirect(self.success_url)
 
 class DetalleFeriaView(LoginRequiredMixin, DetailView):
