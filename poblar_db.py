@@ -77,6 +77,15 @@ ferias_data = [
         "ubicacion": "Campus UNC, Córdoba",
         "capacidad_puestos": 3,
     },
+    # Feria próxima — dentro de los próximos 7 días
+    {
+        "nombre": "Feria de Julio 2026",
+        "categorias": ["Artesanías", "Decoración"],
+        "fecha_inicio": date(2026, 7, 2),
+        "fecha_fin": date(2026, 7, 4),
+        "ubicacion": "Plaza Italia, Córdoba",
+        "capacidad_puestos": 6,
+    },
     # Feria en curso — comenzó pero no terminó
     {
         "nombre": "Festival de Otoño 2026",

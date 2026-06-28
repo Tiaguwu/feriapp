@@ -22,7 +22,7 @@
             <div class="{% if not form.instance.pk %}login-card text-center p-4 rounded-4{% else %}card shadow-sm{% endif %}">
 
                 {% if form.instance.pk %}
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-success text-white">
                         <h4 class="mb-0">
                             Editar Emprendedor
                         </h4>
@@ -62,7 +62,7 @@
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             {% if form.instance.pk%}
-                                <a href="{% url 'ferias:detalle_emprendedor' form.instance.pk %}" class="btn btn-secondary">Cancelar</a>
+                                <a href="{% url 'ferias:mi_perfil' %}" class="btn btn-secondary">Cancelar</a>
                                 <button type="submit" class="btn btn-success">Guardar Cambios</button>
                             {% else %}
                                 <a href="{% url 'login' %}" class="btn btn-outline-light">Cancelar</a>

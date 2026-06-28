@@ -113,7 +113,7 @@ class EmprendedorUpdateView(EmprendedorRequiredMixin, SuccessMessageMixin, Updat
     model = Emprendedor
     form_class = EmprendedorForm
     template_name = 'emprendedores/formulario_emprendedor.html'
-    success_url = reverse_lazy('ferias:lista_emprendedores')
+    success_url = reverse_lazy('ferias:mi_perfil')
     success_message = "Tus datos se actualizaron correctamente."
 
     def get_form_kwargs(self):
@@ -189,7 +189,7 @@ class VisitanteUpdateView(VisitanteRequiredMixin, SuccessMessageMixin, UpdateVie
     model = Visitante
     form_class = VisitanteForm
     template_name = 'visitantes/formulario_visitante.html'
-    success_url = reverse_lazy('ferias:lista_visitantes')
+    success_url = reverse_lazy('ferias:mi_perfil')
     success_message = "Tus datos se actualizaron correctamente."
 
     def get_form_kwargs(self):
