@@ -438,11 +438,6 @@ class ReseniaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
             comentario = form.cleaned_data.get('comentario', ''),
         )
 
-        if errors:
-            for error in errors:
-                form.add_error(None, error)
-            return self.form_invalid(form)
-
         self.object = resenia
         return redirect(self.get_success_url())
 

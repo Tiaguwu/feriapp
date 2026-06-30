@@ -291,4 +291,21 @@ class ReseniaForm(forms.ModelForm):
             inscripcion__estado='confirmada'
         ).distinct()
 
-        # CONSULTA: No tiene clean() porque la validacion la hace la vista con Resenia.new() (Correcto?)
+    def clean(self):
+        cleaned_data = super().clean()
+        emprendedor = cleaned_data.get('emprendedor')
+        feria = cleaned_data.get('feria')
+        calificacion = cleaned_data.get('calificacion')
+
+        if not all([emprendedor, feria, calificacion]):
+            return cleaned_data
+
+        visitante = getattr(sel.usuario, 'perfil_visitante', None)
+        if visitante is None:
+            return cleaned_data
+
+        errors = Resenia.validate(emprendedor, visitante, feria, calificacion)
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_data
