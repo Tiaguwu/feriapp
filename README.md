@@ -167,22 +167,17 @@ feriapp/
 
 > *(Mínimo 200 palabras — completar antes de la entrega final)*
 
-Describir aquí:
-- Por qué eligieron este dominio
-- Cómo modelaron la disponibilidad de puestos (método vs. anotación ORM)
-- Qué validaciones pusieron en el modelo vs. en el formulario
-- Cómo dividieron el trabajo entre los integrantes
-- Cualquier decisión no obvia (ej: por qué el constraint de puesto único, cómo manejaron lista de espera, etc.)
+Elegimos el dominio de ferias y emprendedores porque permite representar de forma clara un escenario real de negocio en el que varios usuarios interactúan con eventos, inscripciones y perfiles diferenciados. La idea principal fue modelar una experiencia sencilla, pero lo suficientemente rica como para incluir reglas de negocio, control de capacidad y permisos. Para la disponibilidad de puestos implementamos lógica en el modelo mediante métodos como `puestos_ocupados()`, `puestos_disponibles()` y `tiene_lugar()`, ya que esta información se consulta desde varias vistas y templates y resulta más expresiva que depender únicamente de una anotación ORM. La validación se distribuyó entre el modelo y los formularios: en los modelos dejamos las reglas de integridad y consistencia del dominio, como que una feria tenga al menos una categoría, que no haya dos inscripciones iguales para el mismo emprendedor en la misma feria y que la fecha de fin no sea anterior a la de inicio; en los formularios agregamos validaciones de entrada y mensajes más claros para el usuario. También definimos perfiles separados para emprendedores y visitantes para restringir acciones y evitar que un rol acceda a procesos que no le corresponden. En cuanto a la organización, el trabajo se dividió en capas bien definidas: modelos, formularios, vistas y templates, lo que facilita el mantenimiento y permite testear cada parte de forma aislada. Además, decidimos manejar las inscripciones como un flujo con estados explícitos (lista de espera, confirmada y cancelada), lo que da mayor control sobre el proceso y permite extender la lógica en futuras versiones sin modificar la estructura principal del sistema.
 
 ---
 
 ## ⭐ Funcionalidades opcionales implementadas
 
-- [ ] Vista "Mis inscripciones" para el emprendedor autenticado
+- [X] Vista "Mis inscripciones" para el emprendedor autenticado
 - [ ] Mensajes flash con `django.contrib.messages`
 - [ ] Paginación en lista de ferias
 - [ ] Barra de búsqueda por nombre o ubicación
-- [ ] Permisos diferenciados (Organizador vs. Emprendedor)
+- [X] Permisos diferenciados (Organizador vs. Emprendedor)
 - [ ] Tests de integración (flujo completo)
 
 ---
