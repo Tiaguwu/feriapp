@@ -300,7 +300,7 @@ class ReseniaForm(forms.ModelForm):
         if not all([emprendedor, feria, calificacion]):
             return cleaned_data
 
-        visitante = getattr(sel.usuario, 'perfil_visitante', None)
+        visitante = getattr(self.usuario, 'perfil_visitante', None)
         if visitante is None:
             return cleaned_data
 
